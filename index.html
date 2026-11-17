@@ -1,0 +1,102 @@
+<!doctype html>
+<html lang="it">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <title>Zoom nell'Universo</title>
+  <meta name="description" content="Uno zoom infinito dalle galassie ai quark… e poi di nuovo all'universo. Trova gli oggetti nascosti e nascondi i tuoi segreti per gli amici!">
+  <meta name="theme-color" content="#070316">
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🌌</text></svg>">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Baloo+2:wght@500;700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <svg id="world" role="img" aria-label="Mondo zoomabile all'infinito">
+    <defs id="defs"></defs>
+    <g id="root"></g>
+  </svg>
+
+  <header class="hud top">
+    <button id="place" class="card place" aria-label="Dove sei: tocca per una curiosità">
+      <span id="placeEmoji" class="place-emoji"></span>
+      <span class="place-txt">
+        <span id="placeName" class="place-name"></span>
+        <span class="place-scale"><span id="placeScale"></span> · 💡 Lo sapevi?</span>
+        <span id="factText" class="fact"></span>
+      </span>
+    </button>
+    <button id="btnCollection" class="card counter" aria-label="La tua collezione">⭐ <span id="foundCount">0</span>/<span id="totalCount">0</span></button>
+  </header>
+
+  <div id="secretBanner" class="card banner" hidden>
+    <span id="bannerText"></span>
+    <button id="bannerHint" class="chip">💡 Indizio</button>
+  </div>
+
+  <div id="bigTitle" class="big-title" aria-live="polite"></div>
+
+  <footer class="hud bottom">
+    <div class="card tray">
+      <span class="tray-label">Trova qui:</span>
+      <span id="trayItems" class="tray-items"></span>
+    </div>
+    <div class="card controls">
+      <button id="btnOut" aria-label="Zoom indietro">➖</button>
+      <button id="btnAuto" class="play" aria-label="Viaggio automatico">▶️</button>
+      <button id="btnIn" aria-label="Zoom avanti">➕</button>
+      <button id="btnHide" class="hide-btn" aria-label="Nascondi un segreto">🙈 <span>Nascondi</span></button>
+    </div>
+    <div id="depth" class="depth"></div>
+  </footer>
+
+  <section id="hidePanel" class="card panel" hidden>
+    <div class="panel-head"><b>🙈 Nascondi un segreto</b><button id="hideClose" class="x" aria-label="Chiudi">✕</button></div>
+    <p class="step"><b>1.</b> Scegli cosa nascondere e scrivi un messaggio</p>
+    <div id="emojiPick" class="emoji-pick"></div>
+    <input id="hideMsg" maxlength="300" placeholder="Messaggio segreto (es. Ti voglio bene!)">
+    <p class="step"><b>2.</b> Zooma dove vuoi e <b>tocca</b> per nasconderlo. Più zoomi, più sarà piccolo e difficile da trovare!</p>
+    <p id="hideCount" class="muted">Nessun segreto nascosto ancora.</p>
+    <p class="step"><b>3.</b> Crea il link e mandalo agli amici</p>
+    <input id="hideName" maxlength="40" placeholder="Il tuo nome (facoltativo)">
+    <div class="row">
+      <button id="hideUndo" class="ghost">↩️ Annulla</button>
+      <button id="hideShare" class="primary">🔗 Crea link</button>
+    </div>
+    <div id="shareOut" class="row" hidden>
+      <input id="shareUrl" readonly aria-label="Link da condividere">
+      <button id="copyBtn" class="ghost">Copia</button>
+    </div>
+  </section>
+
+  <div id="intro" class="overlay">
+    <div class="modal-card intro">
+      <div class="intro-emojis">🌌 🌍 🐞 🧬 ⚛️</div>
+      <h1 id="introTitle">Zoom nell'Universo</h1>
+      <p id="introText">Un viaggio che non finisce mai: dalle galassie fino ai quark… e dentro il quark? Un altro universo! Trova gli <b>oggetti nascosti</b> in ogni mondo e <b>nascondi i tuoi segreti</b> per gli amici.</p>
+      <ul class="howto">
+        <li>🖱️ Rotellina o 🤏 pizzica per zoomare</li>
+        <li>✋ Trascina per muoverti</li>
+        <li>👆 Tocca gli oggetti nascosti</li>
+      </ul>
+      <div class="row center">
+        <button id="startAuto" class="primary big-btn">🚀 Parti!</button>
+        <button id="startFree" class="ghost big-btn">🔍 Esploro da solo</button>
+      </div>
+    </div>
+  </div>
+
+  <div id="modal" class="overlay" hidden>
+    <div class="modal-card">
+      <button id="modalClose" class="x" aria-label="Chiudi">✕</button>
+      <div id="modalBody"></div>
+    </div>
+  </div>
+
+  <div id="toast" class="toast" role="status"></div>
+
+  <script src="js/scenes.js"></script>
+  <script src="js/app.js"></script>
+</body>
+</html>
