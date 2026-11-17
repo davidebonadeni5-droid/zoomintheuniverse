@@ -831,8 +831,8 @@ const SCENES = (() => {
   scenes[3].portals.push({ x: 430, y: 450, to: 12 });  // Terra → Oceano
   scenes[4].portals.push({ x: 600, y: 395, to: 14 });  // Città → Corpo umano
   // bivi extra: il motore disegna da solo il dischetto di fondo (extra: true)
-  [[3, 742, 262, 16], [2, 300, 330, 17], [1, 500, 500, 18], [3, 610, 565, 19], [5, 480, 470, 20], [3, 500, 300, 21], [14, 500, 215, 22], [5, 430, 800, 23]]
-    .forEach(([s, x, y, to]) => scenes[s].portals.push({ x, y, to, extra: true }));
+  [[3, 742, 262, 16], [2, 300, 330, 17], [1, 500, 500, 18], [3, 610, 565, 19], [5, 480, 470, 20], [3, 500, 300, 21], [14, 528, 245.5, 22, 40], [5, 430, 800, 23]]   // l'Occhio è 40 volte più piccolo: sta su un occhio solo
+    .forEach(([s, x, y, to, r]) => scenes[s].portals.push({ x, y, to, extra: true, ...(r ? { r } : {}) }));
   scenes.forEach(sc => sc.items = sc.items.map(([e, x, y, s, name]) => ({ e, x, y, s, name })));
   return scenes;
 })();

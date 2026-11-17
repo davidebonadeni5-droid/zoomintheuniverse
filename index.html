@@ -19,6 +19,7 @@
   </svg>
 
   <header class="hud top">
+    <div class="top-left">
     <button id="place" class="card place" aria-label="Dove sei: tocca per una curiosità" data-i18n-aria="placeAria">
       <span id="placeEmoji" class="place-emoji"></span>
       <span class="place-txt">
@@ -27,6 +28,12 @@
         <span id="factText" class="fact"></span>
       </span>
     </button>
+    <div id="levels" class="levels" hidden>
+      <button data-level="kids" data-i18n="lvKids">🧒 Bambini</button>
+      <button data-level="fun" data-i18n="lvFun">💡 Curiosità</button>
+      <button data-level="sci" data-i18n="lvSci">🧮 Scienza</button>
+    </div>
+    </div>
     <div class="top-right">
       <button id="btnLang" class="card lang" aria-label="Switch to English" data-i18n="langBtn" data-i18n-aria="langAria">🇬🇧 EN</button>
       <button id="btnCollection" class="card counter" aria-label="La tua collezione" data-i18n-aria="collectionAria">⭐ <span id="foundCount">0</span>/<span id="totalCount">0</span></button>
@@ -136,6 +143,7 @@
   <script src="js/real/21.js"></script>
   <script src="js/real/22.js"></script>
   <script src="js/real/23.js"></script>
+  <script src="js/levels.js"></script>
   <script src="js/i18n.js"></script>
   <script src="js/app.js"></script>
 </body>

@@ -49,6 +49,7 @@ const I18N = (() => {
       startAuto: '🚀 Parti!',
       startFree: '🔍 Esploro da solo',
 
+      lvKids: '🧒 Bambini', lvFun: '💡 Curiosità', lvSci: '🧮 Scienza',
       someone: 'Qualcuno',
       chFound: (it, left) => `⏱️ ${it}! Ne ${plural(left, 'manca', 'mancano')} ${left}`,
       alreadyFound: it => `${it}: già trovato!`,
@@ -137,6 +138,7 @@ const I18N = (() => {
       startAuto: "🚀 Let's go!",
       startFree: "🔍 I'll explore",
 
+      lvKids: '🧒 Kids', lvFun: '💡 Fun fact', lvSci: '🧮 Science',
       someone: 'Someone',
       chFound: (it, left) => `⏱️ ${it}! ${left} to go`,
       alreadyFound: it => `${it}: already found!`,

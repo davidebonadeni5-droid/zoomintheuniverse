@@ -47,8 +47,10 @@
       win() { [523, 659, 784, 1047, 784, 1047, 1319].forEach((f, i) => tone(f, 0.2, 'triangle', 0.16, i * 0.11)); },
     };
   })();
-  const origin = (i, k = 0) => { const p = SCENES[i].portals[k]; return [p.x - HALF, p.y - HALF]; };
-  const fixedPt = (i, k = 0) => { const o = origin(i, k); return [o[0] * R / (R - 1), o[1] * R / (R - 1)]; };
+  // ogni portale può avere il suo rapporto di zoom (p.r, di solito 10): più è alto, più il mondo figlio è piccolo
+  const rOf = p => p.r || R, hOf = p => 500 / rOf(p);
+  const origin = (i, k = 0) => { const p = SCENES[i].portals[k]; return [p.x - hOf(p), p.y - hOf(p)]; };
+  const fixedPt = (i, k = 0) => { const o = origin(i, k), r = rOf(SCENES[i].portals[k]); return [o[0] * r / (r - 1), o[1] * r / (r - 1)]; };
   // padre "di default" di ogni mondo: il primo mondo che ha un portale verso di lui
   const DEFAULT_PARENT = SCENES.map((_, i) => {
     for (let s = 0; s < SCENES.length; s++) {
@@ -68,6 +70,7 @@
   const shownBranch = new Set();
   let auto = false, pendingZoom = 0, anchor = null, dirty = true;
   let challenge = null;
+  let level = store.get('ziu-level', 'fun');
   let hideMode = false, chosenEmoji = '🦄';
   const found = new Set(store.get('ziu-found', []));
   let visitor = null; const visitorFound = new Set();
@@ -80,7 +83,7 @@
   // versioni realistiche dei mondi (js/real/N.js): sostituiscono il disegno, non portali e oggetti
   SCENES.forEach((sc, i) => { const r = typeof REAL !== 'undefined' && REAL[i]; if (r && r.svg) { sc.svg = r.svg; sc.defs = r.defs || ''; } });
 
-  SCENES.forEach(sc => sc.portals.forEach(p => { if (p.extra) sc.svg += `<circle cx="${p.x}" cy="${p.y}" r="58" fill="${SCENES[p.to].bg}"/><circle cx="${p.x}" cy="${p.y}" r="58" fill="none" stroke="#fff" stroke-opacity=".7" stroke-width="2.5"/>`; }));
+  SCENES.forEach(sc => sc.portals.forEach(p => { if (p.extra) { const q = 580 / rOf(p); sc.svg += `<circle cx="${p.x}" cy="${p.y}" r="${q}" fill="${SCENES[p.to].bg}"/><circle cx="${p.x}" cy="${p.y}" r="${q}" fill="none" stroke="#fff" stroke-opacity=".7" stroke-width="${q / 23}"/>`; } }));
 
   $('defs').innerHTML =
     `<radialGradient id="softG"><stop offset="0" stop-color="#fff"/><stop offset=".78" stop-color="#fff"/><stop offset="1" stop-color="#000"/></radialGradient>` +
@@ -98,7 +101,7 @@
     let kids = '';
     sc.portals.forEach((p, k) => {
       const inner = kidFn ? kidFn(p, k) : '';
-      if (inner) kids += `<g transform="translate(${p.x - HALF} ${p.y - HALF}) scale(${1 / R})">${inner}</g>`;
+      if (inner) kids += `<g transform="translate(${p.x - hOf(p)} ${p.y - hOf(p)}) scale(${1 / rOf(p)})">${inner}</g>`;
     });
     const items = sc.items.map(it =>
       `<g class="item${found.has(it.id) ? ' found' : ''}" data-item="${it.id}">${glyph(it.x, it.y, it.s, it.e)}</g>`).join('');
@@ -120,38 +123,40 @@
     const cur = sceneMarkup(idx, lod.parent, (p, k) => sceneMarkup(p.to, true, k === lod.deep ? leaf : null));
     root.innerHTML = lod.parent
       ? sceneMarkup(par.s, false, (p, k) => k === par.k ? cur : lod.sib ? leaf(p) : '')
-      : `<g><g transform="translate(${SCENES[par.s].portals[par.k].x - HALF} ${SCENES[par.s].portals[par.k].y - HALF}) scale(${1 / R})">${cur}</g></g>`;
+      : `<g><g transform="translate(${origin(par.s, par.k).join(' ')}) scale(${1 / rOf(SCENES[par.s].portals[par.k])})">${cur}</g></g>`;
     dirty = true;
   }
   function checkLod() { const l = computeLod(); if (`${l.parent}|${l.sib}|${l.deep}` !== lodKey) build(); }
   function render() {
     const par = parentOf(), k = z * base, o = origin(par.s, par.k);
-    const px = o[0] + cx / R, py = o[1] + cy / R;
-    root.setAttribute('transform', `translate(${W / 2} ${H / 2}) scale(${k * R}) translate(${-px} ${-py})`);
+    const pr = rOf(SCENES[par.s].portals[par.k]), px = o[0] + cx / pr, py = o[1] + cy / pr;
+    root.setAttribute('transform', `translate(${W / 2} ${H / 2}) scale(${k * pr}) translate(${-px} ${-py})`);
   }
 
   // ---------- passaggi di livello ----------
   function normalize() {
     let changed = false, looped = false;
     for (let g = 0; g < 8; g++) {
-      if (z >= R) {
-        const k = SCENES[idx].portals.findIndex(p => Math.abs(cx - p.x) <= HALF && Math.abs(cy - p.y) <= HALF);
+      {
+        const k = SCENES[idx].portals.findIndex(p => z >= rOf(p) && Math.abs(cx - p.x) <= hOf(p) && Math.abs(cy - p.y) <= hOf(p));
         if (k >= 0) {
           const o = origin(idx, k), to = SCENES[idx].portals[k].to;
           trail.push({ s: idx, k }); if (trail.length > 80) trail.shift();
           if (to === 0 && idx === N_MAIN - 1) { loops++; looped = true; }
-          cx = (cx - o[0]) * R; cy = (cy - o[1]) * R; z /= R; idx = to; depth++; changed = true; continue;
+          const r = rOf(SCENES[idx].portals[k]);
+          cx = (cx - o[0]) * r; cy = (cy - o[1]) * r; z /= r; idx = to; depth++; changed = true; continue;
         }
       }
       if (z < 1) {
         const p = trail.pop() || DEFAULT_PARENT[idx];
         if (idx === 0 && p.s === N_MAIN - 1) loops--;
         const o = origin(p.s, p.k);
-        cx = o[0] + cx / R; cy = o[1] + cy / R; z *= R; idx = p.s; depth--; changed = true; continue;
+        const r = rOf(SCENES[p.s].portals[p.k]);
+        cx = o[0] + cx / r; cy = o[1] + cy / r; z *= r; idx = p.s; depth--; changed = true; continue;
       }
       break;
     }
-    cx = clamp(cx, 0, 1000); cy = clamp(cy, 0, 1000); z = Math.min(z, R * 4);
+    cx = clamp(cx, 0, 1000); cy = clamp(cy, 0, 1000); z = Math.min(z, 4 * Math.max(...SCENES[idx].portals.map(rOf)));
     dirty = true;
     if (changed) {
       const n = SCENES[idx].portals.length;
@@ -314,12 +319,12 @@
     const k = z * base;
     let x = cx + (sx - W / 2) / k, y = cy + (sy - H / 2) / k, l = idx, px = k;
     if (Math.hypot(x - 500, y - 500) > 400) {
-      const par = parentOf(); l = par.s; const o = origin(par.s, par.k); x = o[0] + x / R; y = o[1] + y / R; px = k * R;
+      const par = parentOf(); l = par.s; const o = origin(par.s, par.k), r = rOf(SCENES[par.s].portals[par.k]); x = o[0] + x / r; y = o[1] + y / r; px = k * r;
     } else {
       for (let d = 0; d < 2; d++) {
-        const kk = SCENES[l].portals.findIndex(p => Math.hypot(x - p.x, y - p.y) < HALF * 0.75);
+        const kk = SCENES[l].portals.findIndex(p => Math.hypot(x - p.x, y - p.y) < hOf(p) * 0.75);
         if (kk < 0) break;
-        const o = origin(l, kk); x = (x - o[0]) * R; y = (y - o[1]) * R; l = SCENES[l].portals[kk].to; px /= R;
+        const o = origin(l, kk), r = rOf(SCENES[l].portals[kk]); x = (x - o[0]) * r; y = (y - o[1]) * r; l = SCENES[l].portals[kk].to; px /= r;
       }
     }
     return { l, x: Math.round(x * 100) / 100, y: Math.round(y * 100) / 100, px };
@@ -428,7 +433,9 @@
     $('placeEmoji').textContent = sc.emoji;
     $('placeName').textContent = sc.name;
     $('placeScale').textContent = sc.scale;
-    $('factText').textContent = sc.fact;
+    const lt = typeof LEVEL_TEXT !== 'undefined' && LEVEL_TEXT[idx] && LEVEL_TEXT[idx][level];
+    $('factText').textContent = (level !== 'fun' && lt && lt[I18N.lang]) || sc.fact;
+    document.querySelectorAll('#levels button').forEach(b => b.classList.toggle('on', b.dataset.level === level));
     $('foundCount').textContent = found.size;
     $('depth').textContent = t('level', depth) + (loops > 0 ? t('loops', loops) : '');
     const tray = $('trayItems'); tray.innerHTML = '';
@@ -468,7 +475,9 @@
   $('btnOut').onclick = () => { setAuto(false); anchor = null; pendingZoom -= Math.log(2.5); };
   $('btnSound').onclick = () => { const m = Sound.toggle(); $('btnSound').textContent = m ? '🔇' : '🔊'; toast(t(m ? 'soundOff' : 'soundOn')); };
   $('btnSound').textContent = Sound.muted ? '🔇' : '🔊';
-  $('place').onclick = () => $('place').classList.toggle('open');
+  // tre livelli di spiegazione: bambini, curiosità, scienza
+  $('place').onclick = () => { const o = $('place').classList.toggle('open'); $('levels').hidden = !o; };
+  document.querySelectorAll('#levels button').forEach(b => b.onclick = () => { level = b.dataset.level; store.set('ziu-level', level); Sound.tap(); updateHUD(false); });
   $('btnCollection').onclick = () => {
     let h = `<h2>${t('collTitle')}</h2><p>${t('collCount', found.size, ALL.length)}</p><div class="coll">`;
     SCENES.forEach(sc => {
