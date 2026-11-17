@@ -4,6 +4,7 @@
  * L'ultima scena (Quark) contiene di nuovo l'Universo: lo zoom è infinito.
  * Alcuni mondi hanno più portali (bivi): Terra → Città o Oceano, Città → Giardino o Corpo umano.
  * I nuovi mondi stanno in fondo all'elenco, così i link dei segreti già condivisi restano validi. */
+const REAL = {};   // disegni realistici, riempiti dai file js/real/N.js
 const SCENES = (() => {
   'use strict';
 
