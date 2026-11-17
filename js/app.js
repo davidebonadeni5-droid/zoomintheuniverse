@@ -91,12 +91,13 @@
   const glyph = (x, y, s, e) =>
     `<circle cx="${x}" cy="${y}" r="${s * 0.8}" fill="transparent"/><text transform="translate(${x} ${y}) scale(${s / 100})" font-size="100">${esc(e)}</text>`;
 
-  // levels = quanti livelli di figli disegnare; only = {k, inner}: per il padre, il ramo corrente già pronto
-  function sceneMarkup(i, levels, masked, only) {
+  // Disegna solo ciò che si vede (LOD): il padre e i fratelli solo se spuntano ai bordi,
+  // i nipoti solo quando si è già zoomati verso un portale. Meno elementi = zoom più fluido.
+  function sceneMarkup(i, masked, kidFn) {
     const sc = SCENES[i];
     let kids = '';
     sc.portals.forEach((p, k) => {
-      const inner = only && k === only.k ? only.inner : levels > 0 ? sceneMarkup(p.to, only ? 0 : levels - 1, true) : '';
+      const inner = kidFn ? kidFn(p, k) : '';
       if (inner) kids += `<g transform="translate(${p.x - HALF} ${p.y - HALF}) scale(${1 / R})">${inner}</g>`;
     });
     const items = sc.items.map(it =>
@@ -105,11 +106,24 @@
       `<g class="secret" data-secret="${kind}:${j}">${glyph(s.x, s.y, s.s, s.e)}</g>` : '').join('');
     return `<g${masked ? ' mask="url(#soft)"' : ''}>${sc.svg}${items}${visitor ? secrets(visitor.s, 'v') : ''}${secrets(mine, 'm')}${kids}</g>`;
   }
+  let lod = { parent: true, sib: true, deep: -1 }, lodKey = '';
+  function computeLod() {
+    const cover = Math.hypot(cx - 500, cy - 500) + Math.hypot(W, H) / 2 / (z * base);   // quanto lontano dal centro arriva lo schermo
+    const parent = cover > (lod.parent ? 372 : 384);
+    const sib = parent && z < (lod.sib ? 1.4 : 1.25);
+    const deep = z >= (lod.deep >= 0 ? 2.2 : 2.6) ? nearestPortal() : -1;
+    return { parent, sib, deep };
+  }
   function build() {
-    const par = parentOf();
-    root.innerHTML = sceneMarkup(par.s, 1, false, { k: par.k, inner: sceneMarkup(idx, 2, true) });
+    lod = computeLod(); lodKey = `${lod.parent}|${lod.sib}|${lod.deep}`;
+    const par = parentOf(), leaf = p => sceneMarkup(p.to, true);
+    const cur = sceneMarkup(idx, lod.parent, (p, k) => sceneMarkup(p.to, true, k === lod.deep ? leaf : null));
+    root.innerHTML = lod.parent
+      ? sceneMarkup(par.s, false, (p, k) => k === par.k ? cur : lod.sib ? leaf(p) : '')
+      : `<g><g transform="translate(${SCENES[par.s].portals[par.k].x - HALF} ${SCENES[par.s].portals[par.k].y - HALF}) scale(${1 / R})">${cur}</g></g>`;
     dirty = true;
   }
+  function checkLod() { const l = computeLod(); if (`${l.parent}|${l.sib}|${l.deep}` !== lodKey) build(); }
   function render() {
     const par = parentOf(), k = z * base, o = origin(par.s, par.k);
     const px = o[0] + cx / R, py = o[1] + cy / R;
@@ -180,7 +194,7 @@
       cx += (ix - cx) * a; cy += (iy - cy) * a;
       normalize();
     }
-    if (dirty) { render(); updateLadder(); dirty = false; }
+    if (dirty) { checkLod(); render(); updateLadder(); dirty = false; }
     requestAnimationFrame(frame);
   }
 
