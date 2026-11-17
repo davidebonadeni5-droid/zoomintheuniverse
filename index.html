@@ -13,94 +13,98 @@
   <link rel="stylesheet" href="style.css">
 </head>
 <body>
-  <svg id="world" role="img" aria-label="Mondo zoomabile all'infinito">
+  <svg id="world" role="img" aria-label="Mondo zoomabile all'infinito" data-i18n-aria="worldAria">
     <defs id="defs"></defs>
     <g id="root"></g>
   </svg>
 
   <header class="hud top">
-    <button id="place" class="card place" aria-label="Dove sei: tocca per una curiosità">
+    <button id="place" class="card place" aria-label="Dove sei: tocca per una curiosità" data-i18n-aria="placeAria">
       <span id="placeEmoji" class="place-emoji"></span>
       <span class="place-txt">
         <span id="placeName" class="place-name"></span>
-        <span class="place-scale"><span id="placeScale"></span> · 💡 Lo sapevi?</span>
+        <span class="place-scale"><span id="placeScale"></span> · <span data-i18n="didYouKnow">💡 Lo sapevi?</span></span>
         <span id="factText" class="fact"></span>
       </span>
     </button>
-    <button id="btnCollection" class="card counter" aria-label="La tua collezione">⭐ <span id="foundCount">0</span>/<span id="totalCount">0</span></button>
+    <div class="top-right">
+      <button id="btnLang" class="card lang" aria-label="Switch to English" data-i18n="langBtn" data-i18n-aria="langAria">🇬🇧 EN</button>
+      <button id="btnCollection" class="card counter" aria-label="La tua collezione" data-i18n-aria="collectionAria">⭐ <span id="foundCount">0</span>/<span id="totalCount">0</span></button>
+    </div>
   </header>
 
   <div id="secretBanner" class="card banner" hidden>
     <span id="bannerText"></span>
-    <button id="bannerHint" class="chip">💡 Indizio</button>
+    <button id="bannerHint" class="chip" data-i18n="hint">💡 Indizio</button>
   </div>
 
   <div id="chBar" class="card chbar" hidden>
     <span id="chTime" class="chtime">3:00</span>
     <span id="chItems" class="chitems"></span>
-    <button id="chStop" class="x" aria-label="Annulla sfida">✕</button>
+    <button id="chStop" class="x" aria-label="Annulla sfida" data-i18n-aria="cancelChallengeAria">✕</button>
   </div>
 
-  <nav id="ladder" class="ladder" aria-label="Mondi"></nav>
+  <nav id="ladder" class="ladder" aria-label="Mondi" data-i18n-aria="worldsAria"></nav>
 
   <div id="bigTitle" class="big-title" aria-live="polite"></div>
 
   <footer class="hud bottom">
     <div class="card tray">
-      <span class="tray-label">Trova qui:</span>
+      <span class="tray-label" data-i18n="findHere">Trova qui:</span>
       <span id="trayItems" class="tray-items"></span>
     </div>
     <div class="card controls">
-      <button id="btnOut" aria-label="Zoom indietro">➖</button>
+      <button id="btnOut" aria-label="Zoom indietro" data-i18n-aria="zoomOutAria">➖</button>
       <button id="btnAuto" class="play" aria-label="Viaggio automatico">▶️</button>
-      <button id="btnIn" aria-label="Zoom avanti">➕</button>
-      <button id="btnHide" class="hide-btn" aria-label="Nascondi un segreto">🙈 <span>Nascondi</span></button>
-      <button id="btnChallenge" aria-label="Sfida a tempo">⏱️</button>
-      <button id="btnSound" aria-label="Suoni on/off">🔊</button>
+      <button id="btnIn" aria-label="Zoom avanti" data-i18n-aria="zoomInAria">➕</button>
+      <button id="btnHide" class="hide-btn" aria-label="Nascondi un segreto" data-i18n-aria="hideAria">🙈 <span data-i18n="hideBtn">Nascondi</span></button>
+      <button id="btnChallenge" aria-label="Sfida a tempo" data-i18n-aria="challengeAria">⏱️</button>
+      <button id="btnSound" aria-label="Suoni on/off" data-i18n-aria="soundAria">🔊</button>
     </div>
     <div id="depth" class="depth"></div>
   </footer>
 
   <section id="hidePanel" class="card panel" hidden>
-    <div class="panel-head"><b>🙈 Nascondi un segreto</b><button id="hideClose" class="x" aria-label="Chiudi">✕</button></div>
-    <p class="step"><b>1.</b> Scegli cosa nascondere e scrivi un messaggio</p>
+    <div class="panel-head"><b data-i18n="hideTitle">🙈 Nascondi un segreto</b><button id="hideClose" class="x" aria-label="Chiudi" data-i18n-aria="close">✕</button></div>
+    <p class="step" data-i18n-html="step1"><b>1.</b> Scegli cosa nascondere e scrivi un messaggio</p>
     <div id="emojiPick" class="emoji-pick"></div>
-    <input id="hideMsg" maxlength="300" placeholder="Messaggio segreto (es. Ti voglio bene!)">
-    <p class="step"><b>2.</b> Zooma dove vuoi e <b>tocca</b> per nasconderlo. Più zoomi, più sarà piccolo e difficile da trovare!</p>
+    <input id="hideMsg" maxlength="300" placeholder="Messaggio segreto (es. Ti voglio bene!)" data-i18n-ph="msgPlaceholder">
+    <p class="step" data-i18n-html="step2"><b>2.</b> Zooma dove vuoi e <b>tocca</b> per nasconderlo. Più zoomi, più sarà piccolo e difficile da trovare!</p>
     <p id="hideCount" class="muted">Nessun segreto nascosto ancora.</p>
-    <p class="step"><b>3.</b> Crea il link e mandalo agli amici</p>
-    <input id="hideName" maxlength="40" placeholder="Il tuo nome (facoltativo)">
+    <p class="step" data-i18n-html="step3"><b>3.</b> Crea il link e mandalo agli amici</p>
+    <input id="hideName" maxlength="40" placeholder="Il tuo nome (facoltativo)" data-i18n-ph="namePlaceholder">
     <div class="row">
-      <button id="hideUndo" class="ghost">↩️ Annulla</button>
-      <button id="hideShare" class="primary">🔗 Crea link</button>
+      <button id="hideUndo" class="ghost" data-i18n="undo">↩️ Annulla</button>
+      <button id="hideShare" class="primary" data-i18n="makeLink">🔗 Crea link</button>
     </div>
     <div id="shareOut" class="row" hidden>
-      <input id="shareUrl" readonly aria-label="Link da condividere">
-      <button id="copyBtn" class="ghost">Copia</button>
+      <input id="shareUrl" readonly aria-label="Link da condividere" data-i18n-aria="shareAria">
+      <button id="copyBtn" class="ghost" data-i18n="copy">Copia</button>
     </div>
   </section>
 
   <div id="intro" class="overlay">
     <div class="modal-card intro">
+      <button id="introLang" class="ghost intro-lang" data-i18n="langBtn" data-i18n-aria="langAria">🇬🇧 EN</button>
       <div class="intro-emojis">🌌 🌍 🐞 🧬 ⚛️</div>
-      <h1 id="introTitle">Zoom nell'Universo</h1>
-      <p id="introText">Un viaggio che non finisce mai: dalle galassie fino ai quark… e dentro il quark? Un altro universo! Trova gli <b>oggetti nascosti</b> in ogni mondo e <b>nascondi i tuoi segreti</b> per gli amici.</p>
+      <h1 id="introTitle" data-i18n="introTitle">Zoom nell'Universo</h1>
+      <p id="introText" data-i18n-html="introText">Un viaggio che non finisce mai: dalle galassie fino ai quark… e dentro il quark? Un altro universo! Trova gli <b>oggetti nascosti</b> in ogni mondo e <b>nascondi i tuoi segreti</b> per gli amici.</p>
       <ul class="howto">
-        <li>🖱️ Rotellina o 🤏 pizzica per zoomare</li>
-        <li>✋ Trascina per muoverti</li>
-        <li>👆 Tocca gli oggetti nascosti</li>
-        <li>⏱️ Prova la sfida a tempo!</li>
+        <li data-i18n="how1">🖱️ Rotellina o 🤏 pizzica per zoomare</li>
+        <li data-i18n="how2">✋ Trascina per muoverti</li>
+        <li data-i18n="how3">👆 Tocca gli oggetti nascosti</li>
+        <li data-i18n="how4">⏱️ Prova la sfida a tempo!</li>
       </ul>
       <div class="row center">
-        <button id="startAuto" class="primary big-btn">🚀 Parti!</button>
-        <button id="startFree" class="ghost big-btn">🔍 Esploro da solo</button>
+        <button id="startAuto" class="primary big-btn" data-i18n="startAuto">🚀 Parti!</button>
+        <button id="startFree" class="ghost big-btn" data-i18n="startFree">🔍 Esploro da solo</button>
       </div>
     </div>
   </div>
 
   <div id="modal" class="overlay" hidden>
     <div class="modal-card">
-      <button id="modalClose" class="x" aria-label="Chiudi">✕</button>
+      <button id="modalClose" class="x" aria-label="Chiudi" data-i18n-aria="close">✕</button>
       <div id="modalBody"></div>
     </div>
   </div>
@@ -108,6 +112,7 @@
   <div id="toast" class="toast" role="status"></div>
 
   <script src="js/scenes.js"></script>
+  <script src="js/i18n.js"></script>
   <script src="js/app.js"></script>
 </body>
 </html>

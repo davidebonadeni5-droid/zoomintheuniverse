@@ -12,6 +12,7 @@
     set(k, v) { try { localStorage.setItem(k, JSON.stringify(v)); } catch { /* niente */ } },
   };
   const mod = i => ((i % N) + N) % N;
+  const t = I18N.t;
 
   // ---------- suoni (sintetizzati, nessun file audio) ----------
   const Sound = (() => {
@@ -215,24 +216,22 @@
     if (challenge && challenge.targets.includes(id) && !challenge.found.has(id)) {
       challenge.found.add(id); confetti(x, y); Sound.found(); updateChallenge();
       if (challenge.found.size === challenge.targets.length) return endChallenge(true);
-      toast(`⏱️ ${it.e} ${it.name}! Ne mancano ${challenge.targets.length - challenge.found.size}`);
+      toast(t('chFound', `${it.e} ${it.name}`, challenge.targets.length - challenge.found.size));
       if (!found.has(id)) { found.add(id); store.set('ziu-found', [...found]); build(); updateHUD(false); }
       return;
     }
-    if (found.has(id)) { toast(`${it.e} ${it.name}: già trovato!`); Sound.tap(); return; }
+    if (found.has(id)) { toast(t('alreadyFound', `${it.e} ${it.name}`)); Sound.tap(); return; }
     found.add(id); store.set('ziu-found', [...found]);
     confetti(x, y); Sound.found();
     const world = SCENES[it.scene].items.every(i => found.has(i.id));
-    toast(`🎉 Hai trovato: ${it.e} ${it.name}!` + (world ? `<br>⭐ Mondo «${SCENES[it.scene].name}» completato!` : ''));
+    toast(t('youFound', `${it.e} ${it.name}`) + (world ? '<br>' + t('worldDone', SCENES[it.scene].name) : ''));
     build(); updateHUD(false);
-    if (found.size === ALL.length) setTimeout(() => Sound.win() || showModal(
-      `<div class="big">🏆</div><h2>Hai trovato tutto!</h2><p>Sei un vero esploratore dell'universo infinito. Ora prova a <b>nascondere</b> qualcosa per i tuoi amici! 🙈</p>`), 900);
+    if (found.size === ALL.length) setTimeout(() => Sound.win() || showModal(t('allFound')), 900);
   }
   function hintFor(it) {
     const dx = it.x - 500, dy = it.y - 500;
-    const v = dy < -120 ? 'in alto' : dy > 120 ? 'in basso' : '', h = dx < -120 ? 'a sinistra' : dx > 120 ? 'a destra' : '';
-    const where = [v, h].filter(Boolean).join(' ') || 'vicino al centro';
-    return `Cerca ${it.e} <b>${it.name}</b> ${where} nel mondo «${SCENES[it.scene].name}». ${it.s < 9 ? 'È minuscolo: zooma tanto! 🔍' : ''}`;
+    const where = t('where', dy < -120 ? -1 : dy > 120 ? 1 : 0, dx < -120 ? -1 : dx > 120 ? 1 : 0);
+    return t('hintItem', `${it.e} <b>${esc(it.name)}</b>`, where, esc(SCENES[it.scene].name), it.s < 9);
   }
 
   // ---------- segreti (nascondi & condividi) ----------
@@ -276,20 +275,20 @@
     const s = Math.round(clamp(28 / p.px, 0.05, 120) * 1000) / 1000;
     mine.push({ l: p.l, x: p.x, y: p.y, s, e: chosenEmoji, m: $('hideMsg').value.trim().slice(0, 300) });
     build(); updateHideCount(); confetti(sx, sy, 10); Sound.hide();
-    toast(`${chosenEmoji} nascosto nel mondo «${SCENES[p.l].name}»!`);
+    toast(t('hiddenIn', chosenEmoji, SCENES[p.l].name));
   }
   function openSecret(key, x, y) {
     const [kind, j] = key.split(':'), list = kind === 'v' ? visitor && visitor.s : mine, s = list && list[+j];
     if (!s) return;
     confetti(x, y, 40); Sound.secret();
-    const who = kind === 'v' ? (visitor.n || 'Qualcuno') : 'Tu';
+    const who = kind === 'v' ? (visitor.n || t('someone')) : '';
     if (kind === 'v') { visitorFound.add(+j); updateBanner(); }
     const card = document.createElement('div');
     card.innerHTML = `<div class="big"></div><h2></h2><p class="msg"></p>`;
     card.querySelector('.big').textContent = s.e;
-    card.querySelector('h2').textContent = kind === 'v' ? `Hai trovato il segreto di ${who}!` : 'Il tuo segreto è qui 🤫';
-    card.querySelector('.msg').textContent = s.m ? `“${s.m}”` : '(nessun messaggio, solo una sorpresa!)';
-    if (kind === 'v' && visitorFound.size === visitor.s.length) card.insertAdjacentHTML('beforeend', '<p>🏆 Li hai trovati tutti!</p>');
+    card.querySelector('h2').textContent = kind === 'v' ? t('foundSecretOf', who) : t('yourSecret');
+    card.querySelector('.msg').textContent = s.m ? `“${s.m}”` : t('noMessage');
+    if (kind === 'v' && visitorFound.size === visitor.s.length) card.insertAdjacentHTML('beforeend', `<p>${t('allSecrets')}</p>`);
     showModal(card);
   }
 
@@ -305,7 +304,7 @@
     challenge = { targets, found: new Set(), end: Date.now() + CH_TIME * 1000, timer: setInterval(tickChallenge, 250), warned: false };
     document.body.classList.add('challenge');
     $('chBar').hidden = false; updateChallenge();
-    toast(`⏱️ Sfida! Trova ${CH_N} oggetti in ${CH_TIME / 60} minuti. Tocca un'icona per un indizio.`);
+    toast(t('chStart', CH_N, CH_TIME / 60));
     Sound.win();
   }
   function tickChallenge() {
@@ -321,7 +320,7 @@
     challenge.targets.forEach(id => {
       const it = ITEM[id], b = document.createElement('button');
       b.textContent = it.e; b.className = challenge.found.has(id) ? 'ok' : 'sil';
-      b.title = challenge.found.has(id) ? it.name : 'Indizio';
+      b.title = challenge.found.has(id) ? it.name : t('hintTitle');
       b.onclick = () => toast(challenge.found.has(id) ? `✅ ${it.e} ${it.name}` : hintFor(it));
       box.appendChild(b);
     });
@@ -331,20 +330,20 @@
     clearInterval(challenge.timer);
     const n = challenge.found.size, took = CH_TIME - Math.max(0, Math.ceil((challenge.end - Date.now()) / 1000));
     challenge = null; document.body.classList.remove('challenge'); $('chBar').hidden = true;
-    if (won === null) return toast('Sfida annullata.');
+    if (won === null) return toast(t('chCancelled'));
     const best = store.get('ziu-best', null);
-    const fmt = t => `${Math.floor(t / 60)}:${String(t % 60).padStart(2, '0')}`;
+    const fmt = sec => `${Math.floor(sec / 60)}:${String(sec % 60).padStart(2, '0')}`;
     let h;
     if (won) {
       Sound.win();
       const record = best === null || took < best;
       if (record) store.set('ziu-best', took);
-      h = `<div class="big">🏆</div><h2>Sfida completata!</h2><p>Hai trovato tutti e ${CH_N} gli oggetti in <b>${fmt(took)}</b>.${record ? ' 🥇 Nuovo record!' : ` Il tuo record è ${fmt(best)}.`}</p>`;
+      h = t('chWon', CH_N, fmt(took), record, record ? '' : fmt(best));
     } else {
       Sound.fail();
-      h = `<div class="big">⏰</div><h2>Tempo scaduto!</h2><p>Hai trovato ${n} oggetti su ${CH_N}.${best !== null ? ` Il tuo record è ${fmt(best)}.` : ''} Riprova: ogni sfida ha oggetti diversi!</p>`;
+      h = t('chLost', n, CH_N, best !== null ? fmt(best) : '');
     }
-    h += `<div class="row center"><button class="primary big-btn" id="chAgain">⏱️ Nuova sfida</button></div>`;
+    h += `<div class="row center"><button class="primary big-btn" id="chAgain">${t('chAgain')}</button></div>`;
     showModal(h); $('chAgain').onclick = startChallenge;
   }
   $('btnChallenge').onclick = () => challenge ? endChallenge(null) : startChallenge();
@@ -353,12 +352,14 @@
   // ---------- scala laterale ----------
   const ladder = $('ladder');
   SCENES.forEach((sc, i) => {
-    const b = document.createElement('button'); b.textContent = sc.emoji; b.title = sc.name;
-    b.setAttribute('aria-label', `Vai a: ${sc.name}`);
+    const b = document.createElement('button'); b.textContent = sc.emoji;
     b.onclick = () => { setAuto(false); Sound.tap(); window.ziu.go(i); toast(`${sc.emoji} ${sc.name}`); };
     ladder.appendChild(b);
   });
   const ladderMark = document.createElement('span'); ladderMark.className = 'mark'; ladder.appendChild(ladderMark);
+  function labelLadder() {
+    ladder.querySelectorAll('button').forEach((b, i) => { b.title = SCENES[i].name; b.setAttribute('aria-label', t('goTo', SCENES[i].name)); });
+  }
   function updateLadder() {
     const frac = clamp(Math.log(z) / Math.log(R), 0, 1), pos = (idx + frac + 0.5) / N * 100;
     ladderMark.style.top = pos + '%';
@@ -375,13 +376,13 @@
     $('factText').textContent = sc.fact;
     $('foundCount').textContent = found.size;
     const loops = Math.floor(depth / N);
-    $('depth').textContent = `🔭 Livello ${depth}` + (loops > 0 ? ` · 🔁 ${loops} ${loops === 1 ? 'giro' : 'giri'} dell'universo!` : '');
+    $('depth').textContent = t('level', depth) + (loops > 0 ? t('loops', loops) : '');
     const tray = $('trayItems'); tray.innerHTML = '';
     sc.items.forEach(it => {
       const b = document.createElement('button');
       b.className = 'tray-item' + (found.has(it.id) ? '' : ' sil');
-      b.textContent = it.e; b.title = found.has(it.id) ? it.name : 'Indizio';
-      b.setAttribute('aria-label', found.has(it.id) ? `${it.name} (trovato)` : 'Oggetto da trovare: chiedi un indizio');
+      b.textContent = it.e; b.title = found.has(it.id) ? it.name : t('hintTitle');
+      b.setAttribute('aria-label', found.has(it.id) ? t('foundTag', it.name) : t('toFind'));
       b.onclick = () => toast(found.has(it.id) ? `✅ ${it.e} ${it.name}` : hintFor(it));
       tray.appendChild(b);
     });
@@ -390,7 +391,7 @@
       const bt = $('bigTitle');
       bt.textContent = `${sc.emoji} ${sc.name}`;
       bt.classList.remove('show'); void bt.offsetWidth; bt.classList.add('show');
-      if (depth === N) toast("🤯 Dentro il quark c'era… un altro universo! Lo zoom non finisce mai.");
+      if (depth === N) toast(t('loopToast'));
     }
   }
   function updateBanner() {
@@ -398,34 +399,34 @@
     if (!visitor) { b.hidden = true; return; }
     b.hidden = false;
     const k = visitor.s.length;
-    $('bannerText').textContent = `🔍 ${visitor.n || 'Qualcuno'} ha nascosto ${k === 1 ? 'un segreto' : k + ' segreti'} nell'universo infinito! Trovati ${visitorFound.size}/${k}`;
+    $('bannerText').textContent = t('banner', visitor.n || t('someone'), k, visitorFound.size);
   }
   $('bannerHint').onclick = () => {
     const j = visitor.s.findIndex((_, i) => !visitorFound.has(i));
-    if (j < 0) return toast('Li hai già trovati tutti! 🏆');
+    if (j < 0) return toast(t('bannerAll'));
     const s = visitor.s[j], sc = SCENES[s.l];
-    toast(`Indizio: cerca nel mondo ${sc.emoji} <b>${sc.name}</b>. ${s.s < 1 ? 'È piccolissimo, zooma tantissimo! 🔬' : s.s < 6 ? 'È piccolo: zooma bene! 🔍' : ''}`);
+    toast(t('secretHint', `${sc.emoji} <b>${esc(sc.name)}</b>`, s.s < 1 ? 2 : s.s < 6 ? 1 : 0));
   };
 
   // ---------- pulsanti ----------
-  function setAuto(on) { auto = on; $('btnAuto').textContent = on ? '⏸️' : '▶️'; $('btnAuto').setAttribute('aria-label', on ? 'Ferma il viaggio' : 'Viaggio automatico'); }
+  function setAuto(on) { auto = on; $('btnAuto').textContent = on ? '⏸️' : '▶️'; $('btnAuto').setAttribute('aria-label', t(on ? 'stopAutoAria' : 'autoAria')); }
   $('btnAuto').onclick = () => setAuto(!auto);
   $('btnIn').onclick = () => { setAuto(false); anchor = null; pendingZoom += Math.log(2.5); };
   $('btnOut').onclick = () => { setAuto(false); anchor = null; pendingZoom -= Math.log(2.5); };
-  $('btnSound').onclick = () => { const m = Sound.toggle(); $('btnSound').textContent = m ? '🔇' : '🔊'; toast(m ? 'Suoni spenti' : 'Suoni accesi 🎵'); };
+  $('btnSound').onclick = () => { const m = Sound.toggle(); $('btnSound').textContent = m ? '🔇' : '🔊'; toast(t(m ? 'soundOff' : 'soundOn')); };
   $('btnSound').textContent = Sound.muted ? '🔇' : '🔊';
   $('place').onclick = () => $('place').classList.toggle('open');
   $('btnCollection').onclick = () => {
-    let h = `<h2>⭐ La tua collezione</h2><p>${found.size} di ${ALL.length} oggetti trovati</p><div class="coll">`;
+    let h = `<h2>${t('collTitle')}</h2><p>${t('collCount', found.size, ALL.length)}</p><div class="coll">`;
     SCENES.forEach(sc => {
       h += `<div class="coll-row"><span class="coll-world">${sc.emoji} ${esc(sc.name)}</span><span>` +
-        sc.items.map(it => found.has(it.id) ? `<span title="${esc(it.name)}">${it.e}</span>` : `<span class="sil" title="Da trovare">${it.e}</span>`).join('') + `</span></div>`;
+        sc.items.map(it => found.has(it.id) ? `<span title="${esc(it.name)}">${it.e}</span>` : `<span class="sil" title="${esc(t('toFindShort'))}">${it.e}</span>`).join('') + `</span></div>`;
     });
     h += `</div>`;
-    if (found.size) h += `<button class="ghost" id="resetFound">Ricomincia da zero</button>`;
+    if (found.size) h += `<button class="ghost" id="resetFound">${t('reset')}</button>`;
     showModal(h);
     const rb = $('resetFound');
-    if (rb) rb.onclick = () => { found.clear(); store.set('ziu-found', []); build(); updateHUD(false); closeModal(); toast('Collezione azzerata. Buona caccia! 🔍'); };
+    if (rb) rb.onclick = () => { found.clear(); store.set('ziu-found', []); build(); updateHUD(false); closeModal(); toast(t('resetDone')); };
   };
 
   // modalità nascondi
@@ -439,27 +440,27 @@
   function setHide(on) {
     hideMode = on; document.body.classList.toggle('hiding', on);
     $('hidePanel').hidden = !on; $('btnHide').classList.toggle('on', on);
-    if (on) { setAuto(false); toast('🙈 Zooma dove vuoi e tocca per nascondere!'); }
+    if (on) { setAuto(false); toast(t('hideOn')); }
   }
   $('btnHide').onclick = () => setHide(!hideMode);
   $('hideClose').onclick = () => setHide(false);
   function updateHideCount() {
-    $('hideCount').textContent = mine.length ? `Hai nascosto ${mine.length} ${mine.length === 1 ? 'segreto' : 'segreti'}: ${mine.map(s => s.e).join(' ')}` : 'Nessun segreto nascosto ancora.';
+    $('hideCount').textContent = mine.length ? t('hiddenCount', mine.length, mine.map(s => s.e).join(' ')) : t('noneHidden');
     $('shareOut').hidden = true;
   }
   $('hideUndo').onclick = () => { mine.pop(); build(); updateHideCount(); };
   $('hideShare').onclick = async () => {
-    if (!mine.length) return toast('Prima nascondi almeno un segreto: tocca un punto del mondo! 👆');
+    if (!mine.length) return toast(t('hideFirst'));
     const url = location.origin + location.pathname + '#s=' + b64e({ n: $('hideName').value.trim().slice(0, 40), s: mine });
     $('shareUrl').value = url; $('shareOut').hidden = false;
-    if (navigator.share) { try { await navigator.share({ title: "Zoom nell'Universo", text: 'Ho nascosto un segreto nell\'universo infinito: riesci a trovarlo? 🔍', url }); return; } catch { /* annullato */ } }
+    if (navigator.share) { try { await navigator.share({ title: t('title'), text: t('shareText'), url }); return; } catch { /* annullato */ } }
     copy(url);
   };
   $('copyBtn').onclick = () => copy($('shareUrl').value);
-  function copy(t) {
-    (navigator.clipboard ? navigator.clipboard.writeText(t) : Promise.reject())
-      .then(() => toast('🔗 Link copiato! Mandalo ai tuoi amici.'))
-      .catch(() => { $('shareUrl').select(); toast('Copia il link qui sotto 👇'); });
+  function copy(text) {
+    (navigator.clipboard ? navigator.clipboard.writeText(text) : Promise.reject())
+      .then(() => toast(t('copied')))
+      .catch(() => { $('shareUrl').select(); toast(t('copyBelow')); });
   }
 
   // ---------- modale, toast, coriandoli ----------
@@ -489,15 +490,26 @@
   // ---------- avvio ----------
   function loadVisitor() {
     visitor = readHash(); visitorFound.clear();
-    if (visitor) {
-      $('introTitle').textContent = '🔍 Caccia al segreto!';
-      $('introText').textContent = `${visitor.n || 'Qualcuno'} ha nascosto ${visitor.s.length === 1 ? 'un segreto' : visitor.s.length + ' segreti'} da qualche parte nell'universo infinito. Zooma, esplora e trovalo!`;
-    }
-    updateBanner(); build();
+    introTexts(); updateBanner(); build();
+  }
+  function introTexts() {
+    if (!visitor) return;
+    $('introTitle').textContent = t('huntTitle');
+    $('introText').textContent = t('huntText', visitor.n || t('someone'), visitor.s.length);
   }
   addEventListener('hashchange', loadVisitor);
+
+  // ---------- lingua ----------
+  function applyLang() {
+    I18N.applyDom(); introTexts(); labelLadder(); updateBanner(); updateHideCount();
+    setAuto(auto); lastShown = -1; updateHUD(false);
+    if (challenge) updateChallenge();
+  }
+  const switchLang = () => { I18N.setLang(I18N.lang === 'it' ? 'en' : 'it'); applyLang(); Sound.tap(); toast(t('langChanged')); };
+  $('btnLang').onclick = switchLang;
+  $('introLang').onclick = switchLang;
   $('startAuto').onclick = () => { $('intro').hidden = true; setAuto(true); };
-  $('startFree').onclick = () => { $('intro').hidden = true; toast('Usa la rotellina, pizzica con due dita o premi ➕ per zoomare!'); };
+  $('startFree').onclick = () => { $('intro').hidden = true; toast(t('freeToast')); };
 
   // chi preferisce meno animazioni: fermiamo quelle dei mondi
   const rm = matchMedia('(prefers-reduced-motion: reduce)');
@@ -505,7 +517,7 @@
   rm.addEventListener && rm.addEventListener('change', applyMotion); applyMotion();
 
   $('totalCount').textContent = ALL.length;
-  resize(); loadVisitor(); updateHUD(true);
+  resize(); loadVisitor(); applyLang(); updateHUD(true);
   requestAnimationFrame(frame);
 
   // piccola API per test/debug
