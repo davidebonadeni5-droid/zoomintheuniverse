@@ -16,7 +16,7 @@ Zoomando indietro torni sempre sulla strada da cui sei arrivato. Il viaggio auto
 ## Cosa si può fare
 - **Zoomare all'infinito**: rotellina del mouse, pizzico con due dita, pulsanti ➕/➖ o il viaggio automatico ▶️.
 - **Trovare gli oggetti nascosti**: 3 in ogni mondo (72 in tutto), alcuni minuscoli. In basso ci sono le sagome: toccale per un indizio. I progressi restano salvati nel browser.
-- **Imparare**: tocca il nome del mondo in alto per una curiosità ("Lo sapevi?").
+- **Imparare a tre livelli**: tocca il nome del mondo in alto e scegli 🧒 **Bambini** (una frase semplicissima), 💡 **Curiosità** oppure 🧮 **Scienza** (numeri, unità di misura e formule). I testi sono in `js/levels.js`.
 - **Mondi vivi**: pianeti in orbita, galassie che ruotano, elettroni che girano, stelle che brillano, fiori che ondeggiano, auto che passano (tutto in SVG animato, nessun video).
 - **Sfida a tempo** ⏱️: 5 oggetti a caso in 3 minuti, con record salvato. Ogni sfida è diversa.
 - **Scala laterale**: mostra in quale mondo sei e a che punto dello zoom; toccando un'icona ci salti direttamente.
