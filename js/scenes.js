@@ -1,7 +1,9 @@
 /* Zoom nell'Universo — scene SVG.
  * Ogni scena vive in un quadrato 1000×1000. Il "portale" è il punto in cui
  * si trova la scena successiva, disegnata 10 volte più piccola (box 100×100).
- * L'ultima scena (Quark) contiene di nuovo l'Universo: lo zoom è infinito. */
+ * L'ultima scena (Quark) contiene di nuovo l'Universo: lo zoom è infinito.
+ * Alcuni mondi hanno più portali (bivi): Terra → Città o Oceano, Città → Giardino o Corpo umano.
+ * I nuovi mondi stanno in fondo all'elenco, così i link dei segreti già condivisi restano validi. */
 const SCENES = (() => {
   'use strict';
 
@@ -234,7 +236,7 @@ const SCENES = (() => {
     s += `<ellipse cx="760" cy="580" rx="95" ry="60" fill="#4aa3df" stroke="#3a8fc7" stroke-width="5"/>`;
     for (let i = 0; i < 26; i++) {
       const x = 530 + r() * 440, y = 345 + r() * 380;
-      if (!far(x, y, [760, 580], 115) || (y > 430 && y < 470)) continue;
+      if (!far(x, y, [760, 580], 115) || !far(x, y, [600, 395], 85) || (y > 430 && y < 470)) continue;
       const rr = 14 + r() * 14;
       s += `<circle cx="${f(x + 3)}" cy="${f(y + 4)}" r="${f(rr)}" fill="#000" opacity=".15"/><circle cx="${f(x)}" cy="${f(y)}" r="${f(rr)}" fill="#2f7d32"/><circle cx="${f(x - rr * 0.3)}" cy="${f(y - rr * 0.3)}" r="${f(rr * 0.45)}" fill="#4caf50"/>`;
     }
@@ -532,6 +534,203 @@ const SCENES = (() => {
     });
   }
 
+
+  // ---------- 12. OCEANO (dalla Terra) ----------
+  {
+    const r = rng(144), P = [600, 380];
+    let s = `<rect width="1000" height="1000" fill="url(#seaG)"/>`;
+    for (let i = 0; i < 6; i++) {
+      const x = 120 + i * 150 + r() * 60, w = 40 + r() * 60;
+      s += `<path d="M${f(x)} 0L${f(x + w)} 0L${f(x + w * 2.4 - 120)} 1000L${f(x - 120)} 1000Z" fill="#fff" opacity=".06">${pulse('opacity', 0.03, 0.1, 4 + r() * 4)}</path>`;
+    }
+    // fondale di sabbia
+    s += `<path d="M0 820Q120 780 250 805T500 800T760 790T1000 810V1000H0Z" fill="#e6c88a"/><path d="M0 860Q200 835 420 855T1000 850V1000H0Z" fill="#d9b672"/>`;
+    for (let i = 0; i < 40; i++) s += `<circle cx="${f(r() * 1000)}" cy="${f(830 + r() * 160)}" r="${f(1.5 + r() * 3)}" fill="#c7a25e" opacity=".7"/>`;
+    // alghe che ondeggiano
+    for (let i = 0; i < 9; i++) {
+      const x = 80 + i * 105 + r() * 30, h = 120 + r() * 140, c = pick(r, ['#2e8b57', '#3cb371', '#228b22']);
+      s += `<g><path d="M${f(x)} 830q-25 ${f(-h / 3)} 0 ${f(-h / 1.5)}t0 ${f(-h / 3)}" stroke="${c}" stroke-width="9" fill="none" stroke-linecap="round"/>${sway(x, 830, 7, 3 + r() * 2)}</g>`;
+    }
+    // coralli
+    const coral = (x, y, c, k) => {
+      let o = '';
+      for (let j = 0; j < 5; j++) { const a = -Math.PI / 2 + (j - 2) * 0.35 * k, L = 50 + r() * 40; o += `<path d="M${x} ${y}q${f(Math.cos(a) * L * 0.4)} ${f(Math.sin(a) * L * 0.6)} ${f(Math.cos(a) * L)} ${f(Math.sin(a) * L)}" stroke="${c}" stroke-width="12" fill="none" stroke-linecap="round"/>`; }
+      return o;
+    };
+    s += coral(170, 830, '#ff7f7f', 1) + coral(450, 815, '#ffa45c', 1.2) + coral(850, 820, '#ff6fb5', 0.9);
+    s += `<ellipse cx="610" cy="815" rx="45" ry="22" fill="#b56bff"/>` + [0, 1, 2, 3, 4, 5, 6].map(j => `<path d="M${575 + j * 12} 805q-6 -40 4 -60" stroke="#d7a6ff" stroke-width="7" fill="none" stroke-linecap="round"/>`).join('');
+    // pesci che nuotano
+    const fishC = ['#ffd93d', '#ff8c42', '#4cc9f0', '#ff6b9d', '#c77dff'];
+    for (let i = 0; i < 10; i++) {
+      const y = 180 + r() * 560, sz = 10 + r() * 14, c = pick(r, fishC), dir = r() < 0.5 ? 1 : -1, d = f(18 + r() * 20);
+      if (Math.abs(y - P[1]) < 80) continue;
+      const fish = `<g transform="scale(${dir} 1)"><ellipse cx="0" cy="0" rx="${f(sz)}" ry="${f(sz * 0.55)}" fill="${c}"/><path d="M${f(-sz * 0.8)} 0l${f(-sz * 0.7)} ${f(-sz * 0.5)}v${f(sz)}z" fill="${c}"/><circle cx="${f(sz * 0.5)}" cy="${f(-sz * 0.12)}" r="${f(sz * 0.14)}" fill="#111"/></g>`;
+      s += `<g>${fish}<animateTransform attributeName="transform" type="translate" from="${dir > 0 ? -60 : 1060} ${f(y)}" to="${dir > 0 ? 1060 : -60} ${f(y)}" dur="${d}s" begin="${f(-r() * d)}s" repeatCount="indefinite"/></g>`;
+    }
+    // medusa
+    s += `<g><path d="M300 230q0 -60 55 -60t55 60z" fill="#ffc2e8" opacity=".85"/>` + [0, 1, 2, 3].map(j => `<path d="M${314 + j * 27} 230q-8 30 0 55t0 50" stroke="#ffc2e8" stroke-width="4" fill="none" opacity=".8"/>`).join('') +
+      `<animateTransform attributeName="transform" type="translate" values="0 0;0 -25;0 0" dur="4s" repeatCount="indefinite" calcMode="spline" keySplines=".45 0 .55 1;.45 0 .55 1"/></g>`;
+    // tartaruga
+    s += `<g><ellipse cx="770" cy="560" rx="52" ry="38" fill="#5a9e4b"/><path d="${blob(r, 770, 560, 34, 0.2, 7)}" fill="#3f7f36"/><circle cx="830" cy="552" r="16" fill="#7cbf6a"/><circle cx="836" cy="548" r="3" fill="#111"/>` +
+      `<ellipse cx="740" cy="525" rx="20" ry="9" fill="#7cbf6a" transform="rotate(-30 740 525)"/><ellipse cx="740" cy="597" rx="20" ry="9" fill="#7cbf6a" transform="rotate(30 740 597)"/>` +
+      `<animateTransform attributeName="transform" type="translate" values="0 0;-20 8;0 0" dur="7s" repeatCount="indefinite" calcMode="spline" keySplines=".45 0 .55 1;.45 0 .55 1"/></g>`;
+    // bolle che salgono
+    for (let i = 0; i < 18; i++) {
+      const x = 60 + r() * 880, d = f(5 + r() * 6);
+      s += `<circle cx="${f(x)}" cy="0" r="${f(3 + r() * 6)}" fill="none" stroke="#fff" stroke-opacity=".6" stroke-width="2"><animateTransform attributeName="transform" type="translate" from="0 850" to="0 60" dur="${d}s" begin="${f(-r() * d)}s" repeatCount="indefinite"/></circle>`;
+    }
+    // nuvola di plancton (portale)
+    s += `<circle cx="${P[0]}" cy="${P[1]}" r="95" fill="url(#plGlow)">${pulse('r', 88, 104, 3)}</circle><circle cx="${P[0]}" cy="${P[1]}" r="64" fill="#2b8a8a" stroke="#9ff5d8" stroke-opacity=".7" stroke-width="3"/>`;
+    for (let i = 0; i < 24; i++) { const a = r() * TAU, d = 66 + r() * 30; s += `<circle cx="${f(P[0] + Math.cos(a) * d)}" cy="${f(P[1] + Math.sin(a) * d)}" r="${f(1.5 + r() * 2.5)}" fill="#c9ffe9" opacity=".8"/>`; }
+    scenes.push({
+      name: 'Oceano', emoji: '🌊', scale: '~10² m', bg: '#2f80d0',
+      portals: [{ x: P[0], y: P[1], to: 13 }],
+      fact: "L'oceano copre il 71% della Terra, e più dell'80% dei suoi fondali non è mai stato esplorato da nessuno!",
+      defs: `<linearGradient id="seaG" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#3f9be3"/><stop offset=".5" stop-color="#2f80d0"/><stop offset="1" stop-color="#1d5aa0"/></linearGradient>` + glow('plGlow', '#9ff5d8', 0.45),
+      svg: s,
+      items: [
+        ['🦀', 330, 790, 12, 'Granchio'],
+        ['⚓', 720, 775, 12, 'Àncora perduta'],
+        ['🧜‍♀️', 250, 420, 10, 'Sirena'],
+      ],
+    });
+  }
+
+  // ---------- 13. PLANCTON (dall'Oceano, porta alla Cellula) ----------
+  {
+    const r = rng(155), P = [480, 520];
+    let s = bg('#2b8a8a');
+    for (let i = 0; i < 160; i++) s += `<circle cx="${f(r() * 1000)}" cy="${f(r() * 1000)}" r="${f(1 + r() * 3)}" fill="#bff7e6" opacity="${f(0.15 + r() * 0.4)}"/>`;
+    const glass = 'fill="#ffffff" fill-opacity=".14" stroke="#e8fff8" stroke-opacity=".75" stroke-width="3"';
+    const centric = (x, y, rr) => {
+      let o = `<circle cx="${f(x)}" cy="${f(y)}" r="${f(rr)}" ${glass}/>`;
+      for (let k = 0; k < 16; k++) { const a = k / 16 * TAU; o += `<path d="M${f(x + Math.cos(a) * rr * 0.25)} ${f(y + Math.sin(a) * rr * 0.25)}L${f(x + Math.cos(a) * rr * 0.95)} ${f(y + Math.sin(a) * rr * 0.95)}" stroke="#e8fff8" stroke-opacity=".45" stroke-width="2"/>`; }
+      return o + `<circle cx="${f(x)}" cy="${f(y)}" r="${f(rr * 0.22)}" fill="#c8f56b" opacity=".7"/>`;
+    };
+    const pennate = (x, y, L, a) => {
+      let o = `<g transform="rotate(${f(a)} ${f(x)} ${f(y)})"><ellipse cx="${f(x)}" cy="${f(y)}" rx="${f(L)}" ry="${f(L * 0.22)}" ${glass}/>`;
+      for (let k = -6; k <= 6; k++) o += `<path d="M${f(x + k * L / 7.5)} ${f(y - L * 0.18)}v${f(L * 0.36)}" stroke="#e8fff8" stroke-opacity=".45" stroke-width="2"/>`;
+      return o + `<ellipse cx="${f(x)}" cy="${f(y)}" rx="${f(L * 0.3)}" ry="${f(L * 0.1)}" fill="#c8f56b" opacity=".7"/></g>`;
+    };
+    const radiolarian = (x, y, rr) => {
+      let o = '';
+      for (let k = 0; k < 18; k++) { const a = k / 18 * TAU; o += `<path d="M${f(x + Math.cos(a) * rr)} ${f(y + Math.sin(a) * rr)}L${f(x + Math.cos(a) * rr * 1.7)} ${f(y + Math.sin(a) * rr * 1.7)}" stroke="#ffe7b0" stroke-width="3" stroke-linecap="round"/>`; }
+      return o + `<circle cx="${f(x)}" cy="${f(y)}" r="${f(rr)}" fill="#ffd27a" fill-opacity=".25" stroke="#ffe7b0" stroke-width="3"/><circle cx="${f(x)}" cy="${f(y)}" r="${f(rr * 0.5)}" fill="#ffb347" opacity=".55"/>`;
+    };
+    const floaty = (inner, dx, dy, d) => `<g>${inner}<animateTransform attributeName="transform" type="translate" values="0 0;${dx} ${dy};0 0" dur="${d}s" repeatCount="indefinite" calcMode="spline" keySplines=".45 0 .55 1;.45 0 .55 1"/></g>`;
+    s += floaty(centric(250, 260, 70), 10, 14, 7) + floaty(centric(780, 600, 55), -12, 8, 8) + floaty(centric(330, 780, 40), 8, -10, 6);
+    s += floaty(pennate(720, 240, 90, 25), -10, 10, 9) + floaty(pennate(200, 560, 70, -40), 12, -6, 7) + floaty(pennate(620, 820, 60, 70), -8, -8, 6.5);
+    s += floaty(radiolarian(790, 380, 38), 6, -12, 5.5);
+    // copepode (piccolo crostaceo)
+    s += floaty(`<g transform="rotate(-20 470 220)"><ellipse cx="470" cy="220" rx="34" ry="22" fill="#ffb3a7" fill-opacity=".8" stroke="#fff" stroke-opacity=".6" stroke-width="2"/><path d="M440 210q-70 -40 -120 -20M440 214q-70 10 -115 40" stroke="#ffb3a7" stroke-width="3" fill="none"/><path d="M504 220l40 4l20 -10M544 224l20 12" stroke="#ffb3a7" stroke-width="4" fill="none" stroke-linecap="round"/><circle cx="448" cy="214" r="5" fill="#d62828"/></g>`, 18, -8, 5);
+    // cellula verde del fitoplancton = portale verso la Cellula
+    s += `<circle cx="${P[0]}" cy="${P[1]}" r="92" fill="url(#phyGlow)"/><circle cx="${P[0]}" cy="${P[1]}" r="66" fill="#3a8a32" stroke="#b8f59a" stroke-width="6"/>`;
+    for (let k = 0; k < 10; k++) { const a = k / 10 * TAU; s += `<ellipse cx="${f(P[0] + Math.cos(a) * 74)}" cy="${f(P[1] + Math.sin(a) * 74)}" rx="9" ry="5" fill="#2e7d32" transform="rotate(${f(a * 180 / Math.PI + 90)} ${f(P[0] + Math.cos(a) * 74)} ${f(P[1] + Math.sin(a) * 74)})"/>`; }
+    scenes.push({
+      name: 'Plancton', emoji: '🦠', scale: '~10⁻⁴ m', bg: '#2b8a8a',
+      portals: [{ x: P[0], y: P[1], to: 7 }],
+      fact: "Il plancton è minuscolo, ma produce circa metà dell'ossigeno che respiriamo! Le diatomee hanno un guscio di vetro.",
+      defs: glow('phyGlow', '#b8f59a', 0.5),
+      svg: s,
+      items: [
+        ['🦐', 760, 300, 11, 'Krill'],
+        ['🔬', 240, 740, 10, 'Microscopio'],
+        ['🥚', 750, 760, 9, 'Uovo di pesce'],
+      ],
+    });
+  }
+
+  // ---------- 14. CORPO UMANO (dalla Città: un bambino sdraiato nel parco) ----------
+  {
+    const r = rng(166), P = [530, 425];
+    let s = bg('#5aa64c');
+    for (let i = 0; i < 320; i++) {
+      const x = r() * 1000, y = r() * 1000, a = r() * TAU, l = 6 + r() * 9;
+      s += `<path d="M${f(x)} ${f(y)}l${f(Math.cos(a) * l)} ${f(Math.sin(a) * l)}" stroke="${r() < 0.5 ? '#4e9a40' : '#74bf62'}" stroke-width="3" stroke-linecap="round" opacity=".6"/>`;
+    }
+    for (let i = 0; i < 14; i++) {
+      const x = r() * 1000, y = r() * 1000; if (Math.hypot(x - 500, y - 520) < 330) continue;
+      s += [0, 1, 2, 3, 4].map(k => `<circle cx="${f(x + Math.cos(k * 1.256) * 9)}" cy="${f(y + Math.sin(k * 1.256) * 9)}" r="7" fill="#fff"/>`).join('') + `<circle cx="${f(x)}" cy="${f(y)}" r="6" fill="#ffd93d"/>`;
+    }
+    const skin = '#f1c27d', skinD = '#d9a35c';
+    // ombra
+    s += `<ellipse cx="510" cy="540" rx="250" ry="330" fill="#000" opacity=".1"/>`;
+    // gambe e scarpe
+    s += `<path d="M465 600L430 820M535 600L570 820" stroke="${skin}" stroke-width="46" stroke-linecap="round"/>`;
+    s += `<ellipse cx="425" cy="850" rx="32" ry="22" fill="#e63946"/><ellipse cx="575" cy="850" rx="32" ry="22" fill="#e63946"/>`;
+    s += `<path d="M418 560h164l14 90h-90l-6 -40l-6 40h-90z" fill="#264653"/>`;
+    // braccia (una mano tiene la farfalla)
+    s += `<path d="M430 340Q330 380 250 420M570 340Q670 380 750 330" stroke="${skin}" stroke-width="40" fill="none" stroke-linecap="round"/>`;
+    s += `<circle cx="245" cy="423" r="24" fill="${skin}"/><circle cx="755" cy="328" r="24" fill="${skin}"/>`;
+    // maglietta
+    s += `<path d="M410 320Q500 295 590 320L600 575Q500 590 400 575Z" fill="#4cc9f0"/><path d="M410 320Q370 330 360 365L420 380ZM590 320Q630 330 640 365L580 380Z" fill="#3ab0d6"/>`;
+    s += `<path d="M470 312Q500 335 530 312" stroke="${skinD}" stroke-width="6" fill="none"/>`;
+    // testa
+    s += `<circle cx="500" cy="235" r="82" fill="${skin}"/><path d="M420 220Q430 140 500 145T585 225Q560 180 500 185T420 220Z" fill="#6b3e26"/>`;
+    s += `<circle cx="472" cy="240" r="9" fill="#2b2b2b"/><circle cx="528" cy="240" r="9" fill="#2b2b2b"/><circle cx="475" cy="237" r="3" fill="#fff"/><circle cx="531" cy="237" r="3" fill="#fff"/>`;
+    s += `<path d="M470 272Q500 298 530 272" stroke="#a0522d" stroke-width="6" fill="none" stroke-linecap="round"/><circle cx="452" cy="265" r="11" fill="#ff8fa3" opacity=".5"/><circle cx="548" cy="265" r="11" fill="#ff8fa3" opacity=".5"/>`;
+    // cuore che batte, con la "finestra" verso il sangue (portale)
+    const heart = 'M0 30C-60 -10 -55 -70 -15 -70C0 -70 0 -55 0 -50C0 -55 0 -70 15 -70C55 -70 60 -10 0 30Z';
+    s += `<g transform="translate(${P[0]} ${P[1] + 22}) scale(2.05)"><path d="${heart}" fill="#e63946" stroke="#fff" stroke-opacity=".7" stroke-width="2"><animateTransform attributeName="transform" type="scale" values="1;1.08;1;1.05;1" dur="1.1s" repeatCount="indefinite"/></path></g>`;
+    s += `<circle cx="${P[0]}" cy="${P[1]}" r="58" fill="#8b1e2b"/>`;
+    scenes.push({
+      name: 'Corpo umano', emoji: '🧒', scale: '~10⁰ m', bg: '#5aa64c',
+      portals: [{ x: P[0], y: P[1], to: 15 }],
+      fact: 'Il tuo cuore batte circa 100.000 volte al giorno e spinge il sangue in 100.000 km di vasi: due volte e mezza il giro della Terra!',
+      defs: '',
+      svg: s,
+      items: [
+        ['🦋', 240, 400, 11, 'Farfalla sulla mano'],
+        ['🍦', 770, 690, 12, 'Gelato caduto'],
+        ['🐜', 600, 760, 8, 'Formica sul ginocchio'],
+      ],
+    });
+  }
+
+  // ---------- 15. SANGUE (dal cuore, porta al DNA) ----------
+  {
+    const r = rng(177), P = [520, 500];
+    let s = bg('#8b1e2b');
+    // pareti del vaso sanguigno
+    s += `<path d="M0 0H1000V170Q750 220 500 175T0 190Z" fill="#c94a5a"/><path d="M0 1000H1000V830Q750 780 500 825T0 810Z" fill="#c94a5a"/>`;
+    s += `<path d="M0 190Q250 160 500 175T1000 170" stroke="#e7788a" stroke-width="10" fill="none"/><path d="M0 810Q250 840 500 825T1000 830" stroke="#e7788a" stroke-width="10" fill="none"/>`;
+    for (let i = 0; i < 60; i++) s += `<circle cx="${f(r() * 1000)}" cy="${f(220 + r() * 560)}" r="${f(1 + r() * 2.5)}" fill="#ffb3c1" opacity=".35"/>`;
+    // globuli rossi che scorrono
+    const rbc = (sz) => `<ellipse cx="0" cy="0" rx="${f(sz)}" ry="${f(sz * 0.62)}" fill="#e63946" stroke="#ff8a95" stroke-width="3"/><ellipse cx="0" cy="0" rx="${f(sz * 0.45)}" ry="${f(sz * 0.26)}" fill="#b51d2c"/>`;
+    for (let i = 0; i < 26; i++) {
+      let y = 230 + r() * 540;
+      if (Math.abs(y - P[1]) < 120) y = P[1] + (y < P[1] ? -150 : 150) + (r() - 0.5) * 40;
+      const sz = 26 + r() * 14, d = f(9 + r() * 7), rot = f(r() * 50 - 25);
+      s += `<g><g transform="rotate(${rot})">${rbc(sz)}</g><animateTransform attributeName="transform" type="translate" from="-80 ${f(y)}" to="1080 ${f(y)}" dur="${d}s" begin="${f(-r() * d)}s" repeatCount="indefinite"/></g>`;
+    }
+    // piastrine
+    for (let i = 0; i < 10; i++) { const d = f(7 + r() * 5), y = 240 + r() * 520; s += `<g><path d="${blob(r, 0, 0, 8, 0.6, 6)}" fill="#ffd27a"/><animateTransform attributeName="transform" type="translate" from="-40 ${f(y)}" to="1040 ${f(y)}" dur="${d}s" begin="${f(-r() * d)}s" repeatCount="indefinite"/></g>`; }
+    // globulo bianco con il nucleo (portale verso il DNA)
+    s += `<path d="${blob(r, P[0], P[1], 120, 0.22, 14)}" fill="#f4eef7" stroke="#d8c8e6" stroke-width="5"/>`;
+    for (let k = 0; k < 20; k++) { const a = r() * TAU, d = 75 + r() * 30; s += `<circle cx="${f(P[0] + Math.cos(a) * d)}" cy="${f(P[1] + Math.sin(a) * d)}" r="${f(3 + r() * 4)}" fill="#c9b6dc" opacity=".7"/>`; }
+    s += `<circle cx="${P[0]}" cy="${P[1]}" r="64" fill="#5a2f8f" stroke="#3b1d63" stroke-width="6"/>`;
+    scenes.push({
+      name: 'Sangue', emoji: '🩸', scale: '~10⁻⁵ m', bg: '#8b1e2b',
+      portals: [{ x: P[0], y: P[1], to: 8 }],
+      fact: 'In una sola goccia di sangue ci sono circa 5 milioni di globuli rossi! I globuli bianchi sono i soldati che ti difendono dai microbi.',
+      defs: '',
+      svg: s,
+      items: [
+        ['🚑', 240, 300, 10, 'Ambulanza minuscola'],
+        ['🛡️', 760, 720, 11, 'Scudo degli anticorpi'],
+        ['🧦', 270, 720, 9, 'Calzino perduto (ma come?!)'],
+      ],
+    });
+  }
+
+  // ---------- portali: catena principale + bivi ----------
+  // catena principale 0→1→…→11→0; ogni scena ha i suoi portali in `portals`
+  scenes.forEach((sc, i) => {
+    if (!sc.portals) sc.portals = [{ x: sc.portal[0], y: sc.portal[1], to: (i + 1) % 12 }];
+    delete sc.portal;
+  });
+  scenes[3].portals.push({ x: 430, y: 450, to: 12 });  // Terra → Oceano
+  scenes[4].portals.push({ x: 600, y: 395, to: 14 });  // Città → Corpo umano
   scenes.forEach(sc => sc.items = sc.items.map(([e, x, y, s, name]) => ({ e, x, y, s, name })));
   return scenes;
 })();

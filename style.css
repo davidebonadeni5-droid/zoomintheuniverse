@@ -85,6 +85,7 @@ body.challenge .banner { display: none; }
 .ladder button { width: 32px; height: 32px; border-radius: 50%; font-size: 17px; opacity: .55; transition: opacity .2s, transform .2s; }
 .ladder button:hover { opacity: 1; }
 .ladder button.on { opacity: 1; transform: scale(1.25); background: rgba(255, 255, 255, .14); }
+.ladder .sep { height: 2px; margin: 4px 6px; background: rgba(255, 255, 255, .25); border-radius: 2px; }
 .ladder .mark { position: absolute; left: -2px; width: 6px; height: 6px; border-radius: 50%; background: var(--accent); transform: translateY(-50%); box-shadow: 0 0 8px var(--accent); transition: top .1s linear; }
 body.hiding .ladder { display: none; }
 
