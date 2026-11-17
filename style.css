@@ -38,6 +38,11 @@ body.hiding #world { cursor: crosshair; }
 .place-scale { color: var(--muted); font-size: 14px; }
 .fact { display: none; font-size: 15px; margin-top: 6px; color: var(--text); }
 .place.open .fact { display: block; }
+.top-right { display: flex; gap: 8px; align-items: flex-start; }
+.lang { padding: 10px 12px; font-weight: 800; font-size: 16px; white-space: nowrap; }
+.lang:hover { background: rgba(40, 32, 90, .85); }
+.intro-lang { position: absolute; top: 12px; right: 12px; padding: 6px 12px; font-size: 15px; }
+.modal-card.intro { padding-top: 52px; }
 .counter { padding: 10px 16px; font-weight: 800; font-size: 20px; white-space: nowrap; }
 
 .banner {
@@ -140,6 +145,9 @@ body.hiding .ladder { display: none; }
   .place-name { font-size: 19px; }
   .place-emoji { font-size: 28px; }
   .counter { font-size: 17px; padding: 8px 12px; }
+  .lang { font-size: 14px; padding: 9px 9px; }
+  .top-right { gap: 6px; }
+  .place { max-width: 56vw; }
   .tray-label { display: none; }
   .tray-item { width: 38px; height: 38px; font-size: 23px; }
   .controls button { min-width: 44px; height: 44px; }
