@@ -1,10 +1,12 @@
 /* Zoom nell'Universo — motore dello zoom infinito.
  * Telecamera: (cx, cy) nel sistema 0..1000 del livello corrente, z = zoom.
- * Quando z ≥ R e il centro è dentro il portale si "scende" al livello figlio;
- * quando z < 1 si "sale" al padre. La catena è circolare → zoom infinito. */
+ * Quando z ≥ R e il centro è dentro un portale si "scende" in quel mondo figlio;
+ * quando z < 1 si "sale" al padre. Alcuni mondi hanno più portali (bivi): il "percorso"
+ * (trail) ricorda da dove sei arrivato, così zoomando indietro torni sulla stessa strada.
+ * La catena principale è circolare → zoom infinito. */
 (() => {
   'use strict';
-  const N = SCENES.length, R = 10, HALF = 500 / R, SPEED = 0.5;
+  const N = SCENES.length, N_MAIN = 12, R = 10, HALF = 500 / R, SPEED = 0.5;
   const $ = id => document.getElementById(id);
   const svg = $('world'), root = $('root');
   const store = {
@@ -45,14 +47,25 @@
       win() { [523, 659, 784, 1047, 784, 1047, 1319].forEach((f, i) => tone(f, 0.2, 'triangle', 0.16, i * 0.11)); },
     };
   })();
-  const origin = i => [SCENES[i].portal[0] - HALF, SCENES[i].portal[1] - HALF];
-  const fixedPt = i => { const o = origin(i); return [o[0] * R / (R - 1), o[1] * R / (R - 1)]; };
+  const origin = (i, k = 0) => { const p = SCENES[i].portals[k]; return [p.x - HALF, p.y - HALF]; };
+  const fixedPt = (i, k = 0) => { const o = origin(i, k); return [o[0] * R / (R - 1), o[1] * R / (R - 1)]; };
+  // padre "di default" di ogni mondo: il primo mondo che ha un portale verso di lui
+  const DEFAULT_PARENT = SCENES.map((_, i) => {
+    for (let s = 0; s < SCENES.length; s++) {
+      const k = SCENES[s].portals.findIndex(p => p.to === i);
+      if (k >= 0) return { s, k };
+    }
+    return null;
+  });
   const esc = s => String(s).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
   const clamp = (v, a, b) => Math.max(a, Math.min(b, v));
 
   // ---------- stato ----------
   let W = 0, H = 0, base = 1;
-  let idx = 0, cx = 500, cy = 500, z = 1, depth = 0;
+  let idx = 0, cx = 500, cy = 500, z = 1, depth = 0, loops = 0;
+  let trail = [], autoK = 0;
+  const parentOf = () => trail.length ? trail[trail.length - 1] : DEFAULT_PARENT[idx];
+  const shownBranch = new Set();
   let auto = false, pendingZoom = 0, anchor = null, dirty = true;
   let challenge = null;
   let hideMode = false, chosenEmoji = '🦄';
@@ -64,6 +77,9 @@
   SCENES.forEach((sc, i) => sc.items.forEach((it, j) => { it.id = i + '-' + j; it.scene = i; ALL.push(it); }));
   const ITEM = Object.fromEntries(ALL.map(it => [it.id, it]));
 
+  // versioni realistiche dei mondi (js/real/N.js): sostituiscono il disegno, non portali e oggetti
+  SCENES.forEach((sc, i) => { const r = typeof REAL !== 'undefined' && REAL[i]; if (r && r.svg) { sc.svg = r.svg; sc.defs = r.defs || ''; } });
+
   $('defs').innerHTML =
     `<radialGradient id="softG"><stop offset="0" stop-color="#fff"/><stop offset=".78" stop-color="#fff"/><stop offset="1" stop-color="#000"/></radialGradient>` +
     `<mask id="soft" maskUnits="userSpaceOnUse" x="0" y="0" width="1000" height="1000"><rect width="1000" height="1000" fill="url(#softG)"/></mask>` +
@@ -73,44 +89,66 @@
   const glyph = (x, y, s, e) =>
     `<circle cx="${x}" cy="${y}" r="${s * 0.8}" fill="transparent"/><text transform="translate(${x} ${y}) scale(${s / 100})" font-size="100">${esc(e)}</text>`;
 
-  function sceneMarkup(i, inner, masked) {
-    const sc = SCENES[i], o = origin(i);
+  // levels = quanti livelli di figli disegnare; only = {k, inner}: per il padre, il ramo corrente già pronto
+  function sceneMarkup(i, levels, masked, only) {
+    const sc = SCENES[i];
+    let kids = '';
+    sc.portals.forEach((p, k) => {
+      const inner = only && k === only.k ? only.inner : levels > 0 ? sceneMarkup(p.to, only ? 0 : levels - 1, true) : '';
+      if (inner) kids += `<g transform="translate(${p.x - HALF} ${p.y - HALF}) scale(${1 / R})">${inner}</g>`;
+    });
     const items = sc.items.map(it =>
       `<g class="item${found.has(it.id) ? ' found' : ''}" data-item="${it.id}">${glyph(it.x, it.y, it.s, it.e)}</g>`).join('');
     const secrets = (list, kind) => list.map((s, j) => s.l === i ?
       `<g class="secret" data-secret="${kind}:${j}">${glyph(s.x, s.y, s.s, s.e)}</g>` : '').join('');
-    return `<g${masked ? ' mask="url(#soft)"' : ''}>${sc.svg}${items}${visitor ? secrets(visitor.s, 'v') : ''}${secrets(mine, 'm')}` +
-      `<g transform="translate(${o[0]} ${o[1]}) scale(${1 / R})">${inner}</g></g>`;
+    return `<g${masked ? ' mask="url(#soft)"' : ''}>${sc.svg}${items}${visitor ? secrets(visitor.s, 'v') : ''}${secrets(mine, 'm')}${kids}</g>`;
   }
   function build() {
-    let inner = '';
-    for (let d = 2; d >= 0; d--) inner = sceneMarkup(mod(idx + d), inner, true);
-    root.innerHTML = sceneMarkup(mod(idx - 1), inner, false);
+    const par = parentOf();
+    root.innerHTML = sceneMarkup(par.s, 1, false, { k: par.k, inner: sceneMarkup(idx, 2, true) });
     dirty = true;
   }
   function render() {
-    const k = z * base, o = origin(mod(idx - 1));
+    const par = parentOf(), k = z * base, o = origin(par.s, par.k);
     const px = o[0] + cx / R, py = o[1] + cy / R;
     root.setAttribute('transform', `translate(${W / 2} ${H / 2}) scale(${k * R}) translate(${-px} ${-py})`);
   }
 
   // ---------- passaggi di livello ----------
   function normalize() {
-    let changed = false; const depthBefore = depth;
-    for (let g = 0; g < 6; g++) {
-      const o = origin(idx);
-      if (z >= R && cx >= o[0] && cx <= o[0] + 2 * HALF && cy >= o[1] && cy <= o[1] + 2 * HALF) {
-        cx = (cx - o[0]) * R; cy = (cy - o[1]) * R; z /= R; idx = mod(idx + 1); depth++; changed = true; continue;
+    let changed = false, looped = false;
+    for (let g = 0; g < 8; g++) {
+      if (z >= R) {
+        const k = SCENES[idx].portals.findIndex(p => Math.abs(cx - p.x) <= HALF && Math.abs(cy - p.y) <= HALF);
+        if (k >= 0) {
+          const o = origin(idx, k), to = SCENES[idx].portals[k].to;
+          trail.push({ s: idx, k }); if (trail.length > 80) trail.shift();
+          if (to === 0 && idx === N_MAIN - 1) { loops++; looped = true; }
+          cx = (cx - o[0]) * R; cy = (cy - o[1]) * R; z /= R; idx = to; depth++; changed = true; continue;
+        }
       }
       if (z < 1) {
-        idx = mod(idx - 1); const q = origin(idx);
-        cx = q[0] + cx / R; cy = q[1] + cy / R; z *= R; depth--; changed = true; continue;
+        const p = trail.pop() || DEFAULT_PARENT[idx];
+        if (idx === 0 && p.s === N_MAIN - 1) loops--;
+        const o = origin(p.s, p.k);
+        cx = o[0] + cx / R; cy = o[1] + cy / R; z *= R; idx = p.s; depth--; changed = true; continue;
       }
       break;
     }
     cx = clamp(cx, 0, 1000); cy = clamp(cy, 0, 1000); z = Math.min(z, R * 4);
     dirty = true;
-    if (changed) { build(); updateHUD(true); Sound.level(depth < depthBefore); }
+    if (changed) {
+      const n = SCENES[idx].portals.length;
+      autoK = n > 1 ? Math.floor(Math.random() * n) : 0;   // ai bivi il viaggio automatico sceglie a caso
+      build(); updateHUD(true);
+      if (looped && loops === 1) toast(t('loopToast'));
+      else if (n > 1 && !shownBranch.has(idx)) { shownBranch.add(idx); toast(t('branch' + idx)); }
+    }
+  }
+  function nearestPortal() {
+    let best = 0, bd = Infinity;
+    SCENES[idx].portals.forEach((p, k) => { const d = Math.hypot(p.x - cx, p.y - cy); if (d < bd) { bd = d; best = k; } });
+    return best;
   }
   function zoomAt(sx, sy, factor) {
     const k = z * base, wx = cx + (sx - W / 2) / k, wy = cy + (sy - H / 2) / k;
@@ -132,7 +170,7 @@
       zoomAt(a[0], a[1], Math.exp(step));
     }
     if (auto) {
-      const fp = fixedPt(idx), zo = z;
+      const fp = fixedPt(idx, autoK), zo = z;
       z *= Math.exp(SPEED * dt);
       const ratio = zo / z;
       cx = fp[0] + (cx - fp[0]) * ratio; cy = fp[1] + (cy - fp[1]) * ratio;
@@ -260,12 +298,12 @@
     const k = z * base;
     let x = cx + (sx - W / 2) / k, y = cy + (sy - H / 2) / k, l = idx, px = k;
     if (Math.hypot(x - 500, y - 500) > 400) {
-      l = mod(idx - 1); const o = origin(l); x = o[0] + x / R; y = o[1] + y / R; px = k * R;
+      const par = parentOf(); l = par.s; const o = origin(par.s, par.k); x = o[0] + x / R; y = o[1] + y / R; px = k * R;
     } else {
       for (let d = 0; d < 2; d++) {
-        const p = SCENES[l].portal;
-        if (Math.hypot(x - p[0], y - p[1]) >= HALF * 0.75) break;
-        const o = origin(l); x = (x - o[0]) * R; y = (y - o[1]) * R; l = mod(l + 1); px /= R;
+        const kk = SCENES[l].portals.findIndex(p => Math.hypot(x - p.x, y - p.y) < HALF * 0.75);
+        if (kk < 0) break;
+        const o = origin(l, kk); x = (x - o[0]) * R; y = (y - o[1]) * R; l = SCENES[l].portals[kk].to; px /= R;
       }
     }
     return { l, x: Math.round(x * 100) / 100, y: Math.round(y * 100) / 100, px };
@@ -352,6 +390,7 @@
   // ---------- scala laterale ----------
   const ladder = $('ladder');
   SCENES.forEach((sc, i) => {
+    if (i === N_MAIN) { const sep = document.createElement('span'); sep.className = 'sep'; ladder.appendChild(sep); }
     const b = document.createElement('button'); b.textContent = sc.emoji;
     b.onclick = () => { setAuto(false); Sound.tap(); window.ziu.go(i); toast(`${sc.emoji} ${sc.name}`); };
     ladder.appendChild(b);
@@ -361,9 +400,9 @@
     ladder.querySelectorAll('button').forEach((b, i) => { b.title = SCENES[i].name; b.setAttribute('aria-label', t('goTo', SCENES[i].name)); });
   }
   function updateLadder() {
-    const frac = clamp(Math.log(z) / Math.log(R), 0, 1), pos = (idx + frac + 0.5) / N * 100;
-    ladderMark.style.top = pos + '%';
-    ladder.querySelectorAll('button').forEach((b, i) => b.classList.toggle('on', i === idx));
+    const frac = clamp(Math.log(z) / Math.log(R), 0, 1), btns = ladder.querySelectorAll('button'), b = btns[idx];
+    if (b) ladderMark.style.top = (b.offsetTop + b.offsetHeight * (0.15 + 0.7 * frac)) + 'px';
+    btns.forEach((x, i) => x.classList.toggle('on', i === idx));
   }
 
   // ---------- HUD ----------
@@ -375,7 +414,6 @@
     $('placeScale').textContent = sc.scale;
     $('factText').textContent = sc.fact;
     $('foundCount').textContent = found.size;
-    const loops = Math.floor(depth / N);
     $('depth').textContent = t('level', depth) + (loops > 0 ? t('loops', loops) : '');
     const tray = $('trayItems'); tray.innerHTML = '';
     sc.items.forEach(it => {
@@ -391,7 +429,6 @@
       const bt = $('bigTitle');
       bt.textContent = `${sc.emoji} ${sc.name}`;
       bt.classList.remove('show'); void bt.offsetWidth; bt.classList.add('show');
-      if (depth === N) toast(t('loopToast'));
     }
   }
   function updateBanner() {
@@ -409,7 +446,7 @@
   };
 
   // ---------- pulsanti ----------
-  function setAuto(on) { auto = on; $('btnAuto').textContent = on ? '⏸️' : '▶️'; $('btnAuto').setAttribute('aria-label', t(on ? 'stopAutoAria' : 'autoAria')); }
+  function setAuto(on) { if (on && !auto) autoK = nearestPortal(); auto = on; $('btnAuto').textContent = on ? '⏸️' : '▶️'; $('btnAuto').setAttribute('aria-label', t(on ? 'stopAutoAria' : 'autoAria')); }
   $('btnAuto').onclick = () => setAuto(!auto);
   $('btnIn').onclick = () => { setAuto(false); anchor = null; pendingZoom += Math.log(2.5); };
   $('btnOut').onclick = () => { setAuto(false); anchor = null; pendingZoom -= Math.log(2.5); };
@@ -523,6 +560,6 @@
   // piccola API per test/debug
   window.ziu = {
     get state() { return { idx, cx, cy, z, depth }; },
-    go(i, x = 500, y = 500, zz = 1) { idx = mod(i); cx = x; cy = y; z = zz; build(); normalize(); updateHUD(true); },
+    go(i, x = 500, y = 500, zz = 1) { idx = mod(i); trail = []; cx = x; cy = y; z = zz; build(); normalize(); updateHUD(true); },
   };
 })();

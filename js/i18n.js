@@ -94,6 +94,8 @@ const I18N = (() => {
       huntText: (who, k) => `${who} ha nascosto ${k === 1 ? 'un segreto' : k + ' segreti'} da qualche parte nell'universo infinito. Zooma, esplora e trovalo!`,
       freeToast: 'Usa la rotellina, pizzica con due dita o premi ➕ per zoomare!',
       langChanged: '🇮🇹 Ora in italiano!',
+      branch3: '🔀 Bivio! Zooma sulla terra 🏘️ oppure tuffati nel mare 🌊',
+      branch4: '🔀 Bivio! Zooma nel giardino 🌻 oppure sul bambino nel parco 🧒',
     },
     en: {
       title: 'Zoom into the Universe',
@@ -184,6 +186,8 @@ const I18N = (() => {
       huntText: (who, k) => `${who} hid ${k === 1 ? 'a secret' : k + ' secrets'} somewhere in the infinite universe. Zoom, explore and find it!`,
       freeToast: 'Use the scroll wheel, pinch with two fingers or press ➕ to zoom!',
       langChanged: '🇬🇧 Now in English!',
+      branch3: '🔀 A fork! Zoom into the land 🏘️ or dive into the sea 🌊',
+      branch4: '🔀 A fork! Zoom into the garden 🌻 or onto the kid in the park 🧒',
     },
   };
 
@@ -213,6 +217,14 @@ const I18N = (() => {
       items: ['Doughnut', 'Target', 'Cherries'] },
     { name: 'Quark', fact: 'Nobody has ever seen a quark on its own: they always come in groups of three, held together by gluons. And inside? Maybe… another universe! 🤯',
       items: ['Dice ("God does not play dice!")', 'Quantum unicorn', 'Whirlpool'] },
+    { name: 'Ocean', fact: 'The ocean covers 71% of the Earth, and more than 80% of the sea floor has never been explored by anyone!',
+      items: ['Crab', 'Lost anchor', 'Mermaid'] },
+    { name: 'Plankton', fact: 'Plankton is tiny, but it makes about half of the oxygen we breathe! Diatoms live inside shells made of glass.',
+      items: ['Krill', 'Microscope', 'Fish egg'] },
+    { name: 'Human body', fact: 'Your heart beats about 100,000 times a day and pushes blood through 100,000 km of blood vessels: two and a half times around the Earth!',
+      items: ['Butterfly on the hand', 'Dropped ice cream', 'Ant on the knee'] },
+    { name: 'Blood', fact: 'A single drop of blood holds about 5 million red blood cells! White blood cells are the soldiers that protect you from germs.',
+      items: ['Tiny ambulance', 'Antibody shield', 'Lost sock (but how?!)'] },
   ];
 
   // Originali italiani, presi dalle scene stesse
