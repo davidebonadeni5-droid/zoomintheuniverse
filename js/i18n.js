@@ -94,8 +94,7 @@ const I18N = (() => {
       huntText: (who, k) => `${who} ha nascosto ${k === 1 ? 'un segreto' : k + ' segreti'} da qualche parte nell'universo infinito. Zooma, esplora e trovalo!`,
       freeToast: 'Usa la rotellina, pizzica con due dita o premi ➕ per zoomare!',
       langChanged: '🇮🇹 Ora in italiano!',
-      branch3: '🔀 Bivio! Zooma sulla terra 🏘️ oppure tuffati nel mare 🌊',
-      branch4: '🔀 Bivio! Zooma nel giardino 🌻 oppure sul bambino nel parco 🧒',
+      branchGeneric: '🔀 Bivio! Qui ci sono più mondi nascosti: cerca i cerchi luminosi e zooma dentro.',
     },
     en: {
       title: 'Zoom into the Universe',
@@ -186,8 +185,7 @@ const I18N = (() => {
       huntText: (who, k) => `${who} hid ${k === 1 ? 'a secret' : k + ' secrets'} somewhere in the infinite universe. Zoom, explore and find it!`,
       freeToast: 'Use the scroll wheel, pinch with two fingers or press ➕ to zoom!',
       langChanged: '🇬🇧 Now in English!',
-      branch3: '🔀 A fork! Zoom into the land 🏘️ or dive into the sea 🌊',
-      branch4: '🔀 A fork! Zoom into the garden 🌻 or onto the kid in the park 🧒',
+      branchGeneric: '🔀 A fork! More worlds are hidden here: look for the glowing circles and zoom in.',
     },
   };
 
@@ -225,6 +223,14 @@ const I18N = (() => {
       items: ['Butterfly on the hand', 'Dropped ice cream', 'Ant on the knee'] },
     { name: 'Blood', fact: 'A single drop of blood holds about 5 million red blood cells! White blood cells are the soldiers that protect you from germs.',
       items: ['Tiny ambulance', 'Antibody shield', 'Lost sock (but how?!)'] },
+    { name: 'Moon', fact: "There is no wind on the Moon: the astronauts' footprints will stay there for millions of years!", items: ['Flag', 'Footprint', 'Moon cheese'] },
+    { name: 'Mars', fact: 'Mars has the tallest volcano in the Solar System: Olympus Mons, almost three times as high as Everest!', items: ['Rover', 'Martian potato', 'Parked UFO'] },
+    { name: 'Black hole', fact: 'At the centre of our galaxy sits a black hole as heavy as 4 million Suns. Not even light can escape!', items: ['Sucked-in sock', 'Slowed-down clock', 'Spaghetti (spaghettification!)'] },
+    { name: 'Volcano', fact: 'Lava can be hotter than 1,200 °C: it is molten rock rising from tens of kilometres beneath our feet!', items: ['Curious dinosaur', 'Melted thermometer', 'Egg frying on a rock'] },
+    { name: 'Beehive', fact: 'To make a single teaspoon of honey, a bee has to visit about 5,000 flowers. The cells are perfect hexagons!', items: ["Queen bee's crown", 'Jar of honey', 'Greedy teddy bear'] },
+    { name: 'Snowflake', fact: 'Every snowflake has six arms, yet no two are alike. They are ice crystals grown around a speck of dust!', items: ['Snowman', 'Lost glove', 'Polar bear'] },
+    { name: 'Eye', fact: 'Your eye can tell apart about 10 million colours, and your iris is as unique as a fingerprint!', items: ['Glasses', 'Teardrop', 'Little mirror'] },
+    { name: 'Ant nest', fact: 'Ants can lift up to 50 times their own weight. A nest can hold millions of them, all daughters of the same queen!', items: ["Queen's crown", 'Stolen candy', 'Bit of leaf'] },
   ];
 
   // Originali italiani, presi dalle scene stesse

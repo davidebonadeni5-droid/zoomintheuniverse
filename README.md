@@ -9,11 +9,13 @@ Ci sono anche dei **bivi** 🔀:
 - dalla 🌍 Terra puoi tuffarti nel 🌊 **Oceano** → 🦠 **Plancton** → e arrivi alla 🟢 Cellula;
 - dalla 🏘️ Città puoi zoomare su un bambino sdraiato nel parco: 🧒 **Corpo umano** → 🩸 **Sangue** → e arrivi al 🧬 DNA.
 
+Altri mondi nascosti nei cerchi luminosi: 🌕 Luna, 🌋 Vulcano e ❄️ Fiocco di neve sulla Terra, 🪐 Marte nel Sistema solare, ⚫ Buco nero al centro della Galassia, 🐝 Alveare e 🐜 Formicaio nel Giardino, 👁️ Occhio sul Corpo umano.
+
 Zoomando indietro torni sempre sulla strada da cui sei arrivato. Il viaggio automatico ▶️ ai bivi sceglie una strada a caso.
 
 ## Cosa si può fare
 - **Zoomare all'infinito**: rotellina del mouse, pizzico con due dita, pulsanti ➕/➖ o il viaggio automatico ▶️.
-- **Trovare gli oggetti nascosti**: 3 in ogni mondo (48 in tutto), alcuni minuscoli. In basso ci sono le sagome: toccale per un indizio. I progressi restano salvati nel browser.
+- **Trovare gli oggetti nascosti**: 3 in ogni mondo (72 in tutto), alcuni minuscoli. In basso ci sono le sagome: toccale per un indizio. I progressi restano salvati nel browser.
 - **Imparare**: tocca il nome del mondo in alto per una curiosità ("Lo sapevi?").
 - **Mondi vivi**: pianeti in orbita, galassie che ruotano, elettroni che girano, stelle che brillano, fiori che ondeggiano, auto che passano (tutto in SVG animato, nessun video).
 - **Sfida a tempo** ⏱️: 5 oggetti a caso in 3 minuti, con record salvato. Ogni sfida è diversa.
@@ -50,6 +52,6 @@ Per aggiungere un mondo: aggiungi una scena **in fondo** a `js/scenes.js` (così
 **Zoom into the Universe** is an endless-zoom website made of SVG drawings, for kids and grown-ups.
 Universe → Galaxy → Solar System → Earth → City → Garden → Ladybug → Cell → DNA → Atom → Nucleus → Quark → … and inside the quark, the Universe again. With forks: from Earth dive into the Ocean → Plankton → Cell, or from the City zoom onto a kid in the park → Human body → Blood → DNA.
 
-Find the 48 hidden objects, read a fun fact for every world, try the timed challenge, and hide your own secrets: pick an emoji and a message, zoom anywhere, tap to hide it, then send the link to a friend.
+Find the 72 hidden objects, read a fun fact for every world, try the timed challenge, and hide your own secrets: pick an emoji and a message, zoom anywhere, tap to hide it, then send the link to a friend.
 
 The language follows your browser; switch it with the button at the top, or add `?lang=en` / `?lang=it` to the address. Open `index.html` to run it — no build step.
