@@ -35,6 +35,14 @@
     <button id="bannerHint" class="chip">💡 Indizio</button>
   </div>
 
+  <div id="chBar" class="card chbar" hidden>
+    <span id="chTime" class="chtime">3:00</span>
+    <span id="chItems" class="chitems"></span>
+    <button id="chStop" class="x" aria-label="Annulla sfida">✕</button>
+  </div>
+
+  <nav id="ladder" class="ladder" aria-label="Mondi"></nav>
+
   <div id="bigTitle" class="big-title" aria-live="polite"></div>
 
   <footer class="hud bottom">
@@ -47,6 +55,8 @@
       <button id="btnAuto" class="play" aria-label="Viaggio automatico">▶️</button>
       <button id="btnIn" aria-label="Zoom avanti">➕</button>
       <button id="btnHide" class="hide-btn" aria-label="Nascondi un segreto">🙈 <span>Nascondi</span></button>
+      <button id="btnChallenge" aria-label="Sfida a tempo">⏱️</button>
+      <button id="btnSound" aria-label="Suoni on/off">🔊</button>
     </div>
     <div id="depth" class="depth"></div>
   </footer>
@@ -79,6 +89,7 @@
         <li>🖱️ Rotellina o 🤏 pizzica per zoomare</li>
         <li>✋ Trascina per muoverti</li>
         <li>👆 Tocca gli oggetti nascosti</li>
+        <li>⏱️ Prova la sfida a tempo!</li>
       </ul>
       <div class="row center">
         <button id="startAuto" class="primary big-btn">🚀 Parti!</button>

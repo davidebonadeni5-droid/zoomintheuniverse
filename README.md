@@ -9,6 +9,10 @@ Parti dall'Universo e zoomi sempre più dentro:
 - **Zoomare all'infinito**: rotellina del mouse, pizzico con due dita, pulsanti ➕/➖ o il viaggio automatico ▶️.
 - **Trovare gli oggetti nascosti**: 3 in ogni mondo (36 in tutto), alcuni minuscoli. In basso ci sono le sagome: toccale per un indizio. I progressi restano salvati nel browser.
 - **Imparare**: tocca il nome del mondo in alto per una curiosità ("Lo sapevi?").
+- **Mondi vivi**: pianeti in orbita, galassie che ruotano, elettroni che girano, stelle che brillano, fiori che ondeggiano, auto che passano (tutto in SVG animato, nessun video).
+- **Sfida a tempo** ⏱️: 5 oggetti a caso in 3 minuti, con record salvato. Ogni sfida è diversa.
+- **Scala laterale**: mostra in quale mondo sei e a che punto dello zoom; toccando un'icona ci salti direttamente.
+- **Suoni** 🔊 sintetizzati al volo (nessun file audio), con pulsante per spegnerli.
 - **Nascondere segreti** 🙈 (come i video su TikTok): scegli un'emoji e un messaggio, zooma dove vuoi e tocca per nasconderlo. Più zoomi, più sarà piccolo. Poi crea il link e mandalo agli amici: chi lo apre deve trovarlo!
   Il segreto è tutto dentro il link: nessun server, nessun account.
 
