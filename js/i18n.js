@@ -4,7 +4,8 @@
  * quando cambia la lingua, così il resto del codice usa sempre sc.name / it.name. */
 const I18N = (() => {
   'use strict';
-  const LANGS = ['it', 'en'];
+  const LANGS = ['it', 'en'];   // le altre lingue si aggiungono con I18N.register (js/lang/xx.js)
+  const META = { it: { name: 'Italiano', flag: '🇮🇹' }, en: { name: 'English', flag: '🇬🇧' } };
   const plural = (n, one, many) => (n === 1 ? one : many);
 
   const UI = {
@@ -27,8 +28,8 @@ const I18N = (() => {
       hideBtn: 'Nascondi',
       challengeAria: 'Sfida a tempo',
       soundAria: 'Suoni on/off',
-      langAria: 'Switch to English',
-      langBtn: '🇬🇧 EN',
+      langAria: 'Cambia lingua',
+      langTitle: '🌐 Scegli la lingua',
       hideTitle: '🙈 Nascondi un segreto',
       close: 'Chiudi',
       step1: '<b>1.</b> Scegli cosa nascondere e scrivi un messaggio',
@@ -116,8 +117,8 @@ const I18N = (() => {
       hideBtn: 'Hide',
       challengeAria: 'Timed challenge',
       soundAria: 'Sound on/off',
-      langAria: 'Passa all\'italiano',
-      langBtn: '🇮🇹 IT',
+      langAria: 'Change language',
+      langTitle: '🌐 Choose your language',
       hideTitle: '🙈 Hide a secret',
       close: 'Close',
       step1: '<b>1.</b> Pick what to hide and write a message',
@@ -244,18 +245,19 @@ const I18N = (() => {
     if (LANGS.includes(q)) return q;
     try { const s = JSON.parse(localStorage.getItem('ziu-lang')); if (LANGS.includes(s)) return s; } catch { /* niente */ }
     const nav = (navigator.languages && navigator.languages[0]) || navigator.language || 'it';
-    return nav.toLowerCase().startsWith('it') ? 'it' : 'en';
+    const code = nav.toLowerCase().slice(0, 2);
+    return LANGS.includes(code) ? code : 'en';
   }
 
-  let lang = detect();
+  let lang = 'it';
 
   function t(key, ...args) {
-    const v = UI[lang][key] ?? UI.it[key];
+    const v = UI[lang][key] ?? UI.en[key] ?? UI.it[key];
     return typeof v === 'function' ? v(...args) : v;
   }
 
   function applyScenes() {
-    SCENE_TEXT[lang].forEach((tx, i) => {
+    SCENES_EN.forEach((en, i) => { const tx = (SCENE_TEXT[lang] || [])[i] || en;
       const sc = SCENES[i];
       sc.name = tx.name; sc.fact = tx.fact;
       sc.items.forEach((it, j) => { it.name = tx.items[j]; });
@@ -286,6 +288,17 @@ const I18N = (() => {
     applyScenes(); applyDom();
   }
 
-  applyScenes();
-  return { t, setLang, applyDom, get lang() { return lang; }, LANGS };
+  // Aggiunge una lingua: { name, flag, ui: {…stesse chiavi di UI.en…}, scenes: [{name, fact, items}], levels: [{kids, sci}] }
+  function register(code, pack) {
+    if (!LANGS.includes(code)) LANGS.push(code);
+    META[code] = { name: pack.name, flag: pack.flag };
+    UI[code] = pack.ui || {};
+    SCENE_TEXT[code] = pack.scenes || SCENES_EN;
+    if (typeof LEVEL_TEXT !== 'undefined' && pack.levels) pack.levels.forEach((lv, i) => {
+      if (LEVEL_TEXT[i] && lv) { LEVEL_TEXT[i].kids[code] = lv.kids; LEVEL_TEXT[i].sci[code] = lv.sci; }
+    });
+  }
+  // da chiamare dopo aver caricato tutte le lingue
+  function init() { lang = detect(); applyScenes(); }
+  return { t, setLang, applyDom, register, init, get lang() { return lang; }, LANGS, META };
 })();

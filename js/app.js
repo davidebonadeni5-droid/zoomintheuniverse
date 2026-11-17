@@ -14,6 +14,7 @@
     set(k, v) { try { localStorage.setItem(k, JSON.stringify(v)); } catch { /* niente */ } },
   };
   const mod = i => ((i % N) + N) % N;
+  I18N.init();
   const t = I18N.t;
 
   // ---------- suoni (sintetizzati, nessun file audio) ----------
@@ -434,7 +435,7 @@
     $('placeName').textContent = sc.name;
     $('placeScale').textContent = sc.scale;
     const lt = typeof LEVEL_TEXT !== 'undefined' && LEVEL_TEXT[idx] && LEVEL_TEXT[idx][level];
-    $('factText').textContent = (level !== 'fun' && lt && lt[I18N.lang]) || sc.fact;
+    $('factText').textContent = (level !== 'fun' && lt && (lt[I18N.lang] || lt.en)) || sc.fact;
     document.querySelectorAll('#levels button').forEach(b => b.classList.toggle('on', b.dataset.level === level));
     $('foundCount').textContent = found.size;
     $('depth').textContent = t('level', depth) + (loops > 0 ? t('loops', loops) : '');
@@ -563,13 +564,24 @@
 
   // ---------- lingua ----------
   function applyLang() {
-    I18N.applyDom(); introTexts(); labelLadder(); updateBanner(); updateHideCount();
+    I18N.applyDom(); langLabel(); introTexts(); labelLadder(); updateBanner(); updateHideCount();
     setAuto(auto); lastShown = -1; updateHUD(false);
     if (challenge) updateChallenge();
   }
-  const switchLang = () => { I18N.setLang(I18N.lang === 'it' ? 'en' : 'it'); applyLang(); Sound.tap(); toast(t('langChanged')); };
-  $('btnLang').onclick = switchLang;
-  $('introLang').onclick = switchLang;
+  const langLabel = () => { const m = I18N.META[I18N.lang]; ['btnLang', 'introLang'].forEach(id => $(id).textContent = `${m.flag} ${I18N.lang.toUpperCase()}`); };
+  function pickLang() {
+    const box = document.createElement('div');
+    box.innerHTML = `<h2>${t('langTitle')}</h2><div class="lang-grid"></div>`;
+    I18N.LANGS.forEach(code => {
+      const b = document.createElement('button'), m = I18N.META[code];
+      b.className = 'ghost' + (code === I18N.lang ? ' on' : ''); b.textContent = `${m.flag} ${m.name}`; b.lang = code;
+      b.onclick = () => { I18N.setLang(code); applyLang(); closeModal(); Sound.tap(); toast(t('langChanged')); };
+      box.querySelector('.lang-grid').appendChild(b);
+    });
+    showModal(box);
+  }
+  $('btnLang').onclick = pickLang;
+  $('introLang').onclick = pickLang;
   $('startAuto').onclick = () => { $('intro').hidden = true; setAuto(true); };
   $('startFree').onclick = () => { $('intro').hidden = true; toast(t('freeToast')); };
 
