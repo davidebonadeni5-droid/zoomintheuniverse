@@ -80,6 +80,8 @@
   // versioni realistiche dei mondi (js/real/N.js): sostituiscono il disegno, non portali e oggetti
   SCENES.forEach((sc, i) => { const r = typeof REAL !== 'undefined' && REAL[i]; if (r && r.svg) { sc.svg = r.svg; sc.defs = r.defs || ''; } });
 
+  SCENES.forEach(sc => sc.portals.forEach(p => { if (p.extra) sc.svg += `<circle cx="${p.x}" cy="${p.y}" r="58" fill="${SCENES[p.to].bg}"/><circle cx="${p.x}" cy="${p.y}" r="58" fill="none" stroke="#fff" stroke-opacity=".7" stroke-width="2.5"/>`; }));
+
   $('defs').innerHTML =
     `<radialGradient id="softG"><stop offset="0" stop-color="#fff"/><stop offset=".78" stop-color="#fff"/><stop offset="1" stop-color="#000"/></radialGradient>` +
     `<mask id="soft" maskUnits="userSpaceOnUse" x="0" y="0" width="1000" height="1000"><rect width="1000" height="1000" fill="url(#softG)"/></mask>` +
@@ -142,7 +144,7 @@
       autoK = n > 1 ? Math.floor(Math.random() * n) : 0;   // ai bivi il viaggio automatico sceglie a caso
       build(); updateHUD(true);
       if (looped && loops === 1) toast(t('loopToast'));
-      else if (n > 1 && !shownBranch.has(idx)) { shownBranch.add(idx); toast(t('branch' + idx)); }
+      else if (n > 1 && !shownBranch.has(idx)) { shownBranch.add(idx); toast(t('branch' + idx) || t('branchGeneric')); }
     }
   }
   function nearestPortal() {

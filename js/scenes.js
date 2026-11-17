@@ -724,6 +724,104 @@ const SCENES = (() => {
     });
   }
 
+
+  // ---------- 16+. ALTRI MONDI (bivi extra) ----------
+  const back = (x, y, c, ring = '#fff') => `<circle cx="${x}" cy="${y}" r="62" fill="${c}"/><circle cx="${x}" cy="${y}" r="62" fill="none" stroke="${ring}" stroke-opacity=".6" stroke-width="3"/>`;
+  const mk = (name, emoji, scale, bgc, to, px, py, fact, defs, svg, items) =>
+    scenes.push({ name, emoji, scale, bg: bgc, portals: [{ x: px, y: py, to }], fact, defs, svg, items });
+  { // 16 LUNA
+    const r = rng(201); let s = bg('#02020a') + stars(r, 120, [500, 500], ['#fff'], 1.2, 340) + `<circle cx="500" cy="500" r="330" fill="url(#lunaG)"/>`;
+    for (let i = 0; i < 46; i++) { const a = r() * TAU, d = Math.sqrt(r()) * 300, x = 500 + Math.cos(a) * d, y = 500 + Math.sin(a) * d, rr = 6 + r() * 30; if (!far(x, y, [560, 440], 95)) continue;
+      s += `<circle cx="${f(x + rr * 0.12)}" cy="${f(y + rr * 0.12)}" r="${f(rr)}" fill="#f2f2f2" opacity=".5"/><circle cx="${f(x)}" cy="${f(y)}" r="${f(rr)}" fill="#6f6f76" opacity=".75"/><circle cx="${f(x + rr * 0.1)}" cy="${f(y + rr * 0.1)}" r="${f(rr * 0.8)}" fill="#8d8d94"/>`; }
+    for (let i = 0; i < 5; i++) s += `<path d="${blob(r, 350 + r() * 300, 350 + r() * 300, 50 + r() * 40, 0.5)}" fill="#55555c" opacity=".3"/>`;
+    s += `<circle cx="500" cy="500" r="330" fill="url(#lunaS)"/>` + back(560, 440, '#14183f');
+    mk('Luna', '🌕', '~10⁶ m', '#02020a', 9, 560, 440, 'Sulla Luna non c\'è vento: le impronte degli astronauti resteranno lì per milioni di anni!',
+      `<radialGradient id="lunaG" cx=".38" cy=".35" r=".75"><stop offset="0" stop-color="#e9e9ee"/><stop offset=".6" stop-color="#a9a9b2"/><stop offset="1" stop-color="#5a5a63"/></radialGradient><radialGradient id="lunaS" cx=".35" cy=".3" r=".8"><stop offset=".55" stop-color="#000" stop-opacity="0"/><stop offset="1" stop-color="#000" stop-opacity=".65"/></radialGradient>`,
+      s, [['🚩', 380, 330, 10, 'Bandiera'], ['👣', 620, 640, 9, 'Impronta'], ['🧀', 350, 620, 9, 'Formaggio lunare']]);
+  }
+  { // 17 MARTE
+    const r = rng(202); let g = `<circle cx="500" cy="500" r="330" fill="url(#marteG)"/>`;
+    for (let i = 0; i < 9; i++) g += `<path d="${blob(r, 250 + r() * 500, 300 + r() * 400, 50 + r() * 80, 0.6)}" fill="#7a2d16" opacity=".35"/>`;
+    for (let i = 0; i < 30; i++) { const x = 220 + r() * 560, y = 220 + r() * 560, rr = 4 + r() * 14; g += `<circle cx="${f(x)}" cy="${f(y)}" r="${f(rr)}" fill="#6b2412" opacity=".45"/><circle cx="${f(x + 1.5)}" cy="${f(y + 1.5)}" r="${f(rr * 0.75)}" fill="#c9683f" opacity=".6"/>`; }
+    g += `<path d="M260 560q120 -50 240 -10t230 -30" stroke="#5e1f10" stroke-width="16" fill="none" opacity=".5" stroke-linecap="round"/><ellipse cx="500" cy="190" rx="130" ry="34" fill="#fff6f0" opacity=".9"/><ellipse cx="500" cy="815" rx="90" ry="22" fill="#fff6f0" opacity=".8"/><circle cx="500" cy="500" r="330" fill="url(#lunaS)"/>`;
+    const s = bg('#02020a') + stars(r, 120, [500, 500], ['#fff'], 1.2, 340) + `<circle cx="500" cy="500" r="345" fill="url(#marteA)"/><g clip-path="url(#marteC)">${g}</g>` + back(450, 520, '#14183f');
+    mk('Marte', '🪐', '~10⁷ m', '#02020a', 9, 450, 520, 'Su Marte c\'è il vulcano più alto del Sistema solare: il Monte Olimpo, alto quasi tre volte l\'Everest!',
+      `<radialGradient id="marteG" cx=".38" cy=".35" r=".75"><stop offset="0" stop-color="#f0a070"/><stop offset=".6" stop-color="#c8552d"/><stop offset="1" stop-color="#7a2b14"/></radialGradient>` + glow('marteA', '#ff9a6b', 0.5) + `<clipPath id="marteC"><circle cx="500" cy="500" r="330"/></clipPath>`,
+      s, [['🤖', 600, 380, 10, 'Rover'], ['🥔', 560, 660, 8, 'Patata marziana'], ['🛸', 330, 400, 9, 'UFO parcheggiato']]);
+  }
+  { // 18 BUCO NERO
+    const r = rng(203); let s = bg('#06041a') + stars(r, 160, [500, 500], ['#fff', '#ffd9a8'], 1.4, 170) + `<circle cx="500" cy="500" r="430" fill="url(#bnGlow)"/><g>`;
+    for (let i = 0; i < 14; i++) s += `<ellipse cx="500" cy="500" rx="${180 + i * 17}" ry="${(180 + i * 17) * 0.36}" fill="none" stroke="${['#fff3c4', '#ffb347', '#ff7a2f', '#c8401a'][i % 4]}" stroke-width="${f(5 + r() * 9)}" stroke-opacity="${f(0.75 - i * 0.04)}" stroke-dasharray="${f(200 + r() * 500)} ${f(20 + r() * 90)}"/>`;
+    s += `${spin(500, 500, 40)}</g><circle cx="500" cy="500" r="150" fill="#000"/><circle cx="500" cy="500" r="153" fill="none" stroke="#ffe7b0" stroke-width="5">${pulse('stroke-opacity', 0.9, 0.5, 3)}</circle><path d="M350 500A150 150 0 0 1 650 500" fill="none" stroke="#ffb347" stroke-width="12" opacity=".7" transform="translate(0 -6)"/>` + back(500, 500, '#070316', '#ffb347');
+    mk('Buco nero', '⚫', '~10¹⁰ m', '#06041a', 0, 500, 500, 'Al centro della nostra galassia c\'è un buco nero che pesa come 4 milioni di Soli. Nemmeno la luce riesce a scappare!',
+      glow('bnGlow', '#ff8a3d', 0.4), s, [['🧦', 250, 330, 10, 'Calzino risucchiato'], ['⏰', 730, 660, 10, 'Orologio rallentato'], ['🍝', 700, 300, 10, 'Spaghetti (spaghettificazione!)']]);
+  }
+  { // 19 VULCANO (dall'alto)
+    const r = rng(204); let s = bg('#3b2a22');
+    for (let i = 0; i < 90; i++) s += `<path d="${blob(r, r() * 1000, r() * 1000, 14 + r() * 40, 0.6, 7)}" fill="${pick(r, ['#2b1d17', '#4a362c', '#5a4337'])}" opacity=".6"/>`;
+    [330, 270, 210].forEach((rr, i) => s += `<path d="${blob(r, 500, 500, rr, 0.18, 14)}" fill="${['#4a342a', '#2e1f19', '#1c120e'][i]}"/>`);
+    for (let i = 0; i < 7; i++) { const a = i / 7 * TAU + r(), L = 260 + r() * 160; s += `<path d="M${f(500 + Math.cos(a) * 150)} ${f(500 + Math.sin(a) * 150)}Q${f(500 + Math.cos(a + 0.3) * L * 0.7)} ${f(500 + Math.sin(a + 0.3) * L * 0.7)} ${f(500 + Math.cos(a) * L)} ${f(500 + Math.sin(a) * L)}" stroke="#ff5a1f" stroke-width="${f(8 + r() * 12)}" fill="none" stroke-linecap="round" opacity=".85"/><path d="M${f(500 + Math.cos(a) * 150)} ${f(500 + Math.sin(a) * 150)}Q${f(500 + Math.cos(a + 0.3) * L * 0.7)} ${f(500 + Math.sin(a + 0.3) * L * 0.7)} ${f(500 + Math.cos(a) * L)} ${f(500 + Math.sin(a) * L)}" stroke="#ffd23f" stroke-width="3" fill="none" stroke-linecap="round"/>`; }
+    s += `<circle cx="500" cy="500" r="260" fill="url(#vulG)">${pulse('r', 240, 280, 3)}</circle><path d="${blob(r, 500, 500, 160, 0.2, 12)}" fill="url(#vulL)"/>`;
+    for (let i = 0; i < 14; i++) s += `<path d="${blob(r, 420 + r() * 160, 420 + r() * 160, 8 + r() * 18, 0.6, 6)}" fill="#3a1408" opacity=".7"/>`;
+    s += back(500, 500, '#14183f', '#ffd23f');
+    mk('Vulcano', '🌋', '~10³ m', '#3b2a22', 9, 500, 500, 'La lava può superare i 1.200 °C: è roccia fusa che arriva da decine di chilometri sotto i nostri piedi!',
+      glow('vulG', '#ff6a1f', 0.6) + `<radialGradient id="vulL"><stop offset="0" stop-color="#fff3a8"/><stop offset=".5" stop-color="#ff9a1f"/><stop offset="1" stop-color="#c8300f"/></radialGradient>`,
+      s, [['🦖', 280, 620, 11, 'Dinosauro curioso'], ['🌡️', 700, 330, 10, 'Termometro fuso'], ['🍳', 680, 680, 10, 'Uovo fritto sulla roccia']]);
+  }
+  { // 20 ALVEARE
+    const r = rng(205); let s = bg('#e0a021'); const R6 = 46, hx = R6 * 1.5, hy = R6 * Math.sqrt(3);
+    for (let c = -1; c * hx < 1050; c++) for (let q = -1; q * hy < 1050; q++) { const x = c * hx, y = q * hy + (c % 2 ? hy / 2 : 0); let d = '';
+      for (let k = 0; k < 6; k++) d += `${k ? 'L' : 'M'}${f(x + Math.cos(k * Math.PI / 3) * R6)} ${f(y + Math.sin(k * Math.PI / 3) * R6)}`;
+      const t = r(); s += `<path d="${d}Z" fill="${t < 0.35 ? 'url(#mieleG)' : t < 0.5 ? '#f6d57a' : '#b8770f'}" stroke="#8a560a" stroke-width="7" stroke-linejoin="round"/>` + (t < 0.35 ? `<ellipse cx="${f(x - 10)}" cy="${f(y - 12)}" rx="12" ry="6" fill="#fff" opacity=".45"/>` : ''); }
+    const bee = (x, y, a, d) => `<g><g transform="translate(${x} ${y}) rotate(${a})"><ellipse cx="6" cy="10" rx="30" ry="18" fill="#000" opacity=".2"/><ellipse cx="-8" cy="-20" rx="22" ry="11" fill="#fff" opacity=".6" transform="rotate(-25)"/><ellipse cx="-8" cy="20" rx="22" ry="11" fill="#fff" opacity=".6" transform="rotate(25)"/><ellipse rx="28" ry="17" fill="url(#apeG)"/><path d="M-10 -16v32M2 -17v34M13 -14v28" stroke="#2b1a05" stroke-width="7"/><circle cx="27" cy="0" r="12" fill="#2b1a05"/></g><animateTransform attributeName="transform" type="translate" values="0 0;${d} ${-d};0 0" dur="${3 + Math.abs(d) / 6}s" repeatCount="indefinite"/></g>`;
+    s += bee(330, 470, 20, 18) + bee(660, 330, 200, -14) + bee(620, 700, -40, 12) + bee(250, 760, 110, -16) + bee(760, 520, 70, 10) + back(500, 500, '#5a2f8f', '#ffe7a0');
+    mk('Alveare', '🐝', '~10⁻² m', '#e0a021', 8, 500, 500, 'Per fare un solo cucchiaino di miele, un\'ape deve visitare circa 5.000 fiori. Le celle sono esagoni perfetti!',
+      `<radialGradient id="mieleG" cx=".4" cy=".35"><stop offset="0" stop-color="#ffd76a"/><stop offset="1" stop-color="#e08a0b"/></radialGradient>` + sphere('apeG', '#ffe680', '#f5b914', '#a86a05'),
+      s, [['👑', 300, 300, 10, 'Corona dell\'ape regina'], ['🍯', 720, 640, 11, 'Vasetto di miele'], ['🧸', 290, 650, 10, 'Orsetto goloso']]);
+  }
+  { // 21 FIOCCO DI NEVE
+    const r = rng(206); let s = `<rect width="1000" height="1000" fill="url(#neveBg)"/>`;
+    for (let i = 0; i < 60; i++) s += `<circle cx="${f(r() * 1000)}" cy="${f(r() * 1000)}" r="${f(2 + r() * 6)}" fill="#fff" opacity="${f(0.2 + r() * 0.5)}"/>`;
+    let arm = `<path d="M0 0V-350" stroke="url(#neveA)" stroke-width="22" stroke-linecap="round"/>`;
+    [[-110, 90], [-190, 110], [-270, 80], [-320, 45]].forEach(([y, L]) => arm += `<path d="M0 ${y}l${-L * 0.8} ${-L * 0.6}M0 ${y}l${L * 0.8} ${-L * 0.6}" stroke="#f4fbff" stroke-width="13" stroke-linecap="round"/>`);
+    arm += `<path d="M0 -70L-38 -100L0 -150L38 -100Z" fill="#e3f4ff" opacity=".8"/>`;
+    s += `<g transform="translate(508 508)" opacity=".18">` + [0, 60, 120, 180, 240, 300].map(a => `<g transform="rotate(${a})">${arm.replace(/url\(#neveA\)|#f4fbff|#e3f4ff/g, '#0b3a66')}</g>`).join('') + `</g>`;
+    s += `<g transform="translate(500 500)">` + [0, 60, 120, 180, 240, 300].map(a => `<g transform="rotate(${a})">${arm}</g>`).join('') + `<circle r="80" fill="#eaf7ff"/></g>` + back(500, 500, '#14183f', '#bfe3ff');
+    mk('Fiocco di neve', '❄️', '~10⁻³ m', '#8ec5ee', 9, 500, 500, 'Ogni fiocco di neve ha sei punte, ma non ne esistono due identici. Sono cristalli di ghiaccio cresciuti attorno a un granello di polvere!',
+      `<radialGradient id="neveBg"><stop offset="0" stop-color="#bfe3ff"/><stop offset="1" stop-color="#8ec5ee"/></radialGradient><linearGradient id="neveA" x1="0" x2="1"><stop offset="0" stop-color="#d3ecff"/><stop offset=".5" stop-color="#fff"/><stop offset="1" stop-color="#c2e2fb"/></linearGradient>`,
+      s, [['⛄', 260, 280, 11, 'Pupazzo di neve'], ['🧤', 740, 300, 10, 'Guanto perso'], ['🐻‍❄️', 720, 720, 11, 'Orso polare']]);
+  }
+  { // 22 OCCHIO
+    const r = rng(207); let s = `<rect width="1000" height="1000" fill="url(#pelleG)"/>`;
+    for (let i = 0; i < 80; i++) s += `<circle cx="${f(r() * 1000)}" cy="${f(r() * 1000)}" r="${f(1 + r() * 2)}" fill="#b98253" opacity=".35"/>`;
+    const eye = 'M130 500Q500 200 870 500Q500 800 130 500Z';
+    s += `<path d="M110 440Q500 110 890 440" stroke="#5a371f" stroke-width="34" fill="none" stroke-linecap="round" opacity=".85"/><path d="${eye}" fill="#000" opacity=".25" transform="translate(0 14)"/><path d="${eye}" fill="url(#scleraG)"/><g clip-path="url(#occhioC)">`;
+    for (let i = 0; i < 12; i++) s += `<path d="M${r() < 0.5 ? 140 : 860} ${f(420 + r() * 160)}q${f((r() - 0.5) * 200)} ${f((r() - 0.5) * 80)} ${f((r() - 0.5) * 260)} ${f((r() - 0.5) * 60)}" stroke="#d94a4a" stroke-width="2" fill="none" opacity=".45"/>`;
+    s += `<circle cx="500" cy="500" r="190" fill="url(#irideG)"/>`;
+    for (let i = 0; i < 90; i++) { const a = i / 90 * TAU + r() * 0.05; s += `<path d="M${f(500 + Math.cos(a) * 70)} ${f(500 + Math.sin(a) * 70)}L${f(500 + Math.cos(a) * (150 + r() * 36))} ${f(500 + Math.sin(a) * (150 + r() * 36))}" stroke="${pick(r, ['#2c5a3a', '#8fbf7a', '#c9a24b', '#234a5e'])}" stroke-width="${f(1.5 + r() * 3)}" opacity=".6"/>`; }
+    s += `<circle cx="500" cy="500" r="190" fill="none" stroke="#1d3327" stroke-width="10"/><path d="${eye}" fill="url(#palpG)"/></g>`;
+    for (let i = 0; i < 22; i++) { const t = i / 21, x = 170 + t * 660, y = 500 - Math.sin(t * Math.PI) * 150 - 8; s += `<path d="M${f(x)} ${f(y)}q${f((t - 0.5) * 30)} -40 ${f((t - 0.5) * 70)} ${f(-60 - Math.sin(t * Math.PI) * 30)}" stroke="#2b1a10" stroke-width="5" fill="none" stroke-linecap="round"/>`; }
+    s += back(500, 500, '#8b1e2b', '#1d3327') + `<ellipse cx="440" cy="430" rx="34" ry="22" fill="#fff" opacity=".8" transform="rotate(-30 440 430)"/>`;
+    mk('Occhio', '👁️', '~10⁻² m', '#f1c27d', 15, 500, 500, 'Il tuo occhio distingue circa 10 milioni di colori, e l\'iride è unica come un\'impronta digitale!',
+      `<radialGradient id="pelleG"><stop offset="0" stop-color="#f6cf96"/><stop offset="1" stop-color="#f1c27d"/></radialGradient><radialGradient id="scleraG"><stop offset=".5" stop-color="#fff"/><stop offset="1" stop-color="#e3d3cf"/></radialGradient><radialGradient id="irideG"><stop offset=".3" stop-color="#c9a24b"/><stop offset=".6" stop-color="#5f9a6a"/><stop offset="1" stop-color="#1f4a3a"/></radialGradient><linearGradient id="palpG" x1="0" y1="0" x2="0" y2="1"><stop offset=".25" stop-color="#000" stop-opacity=".35"/><stop offset=".45" stop-color="#000" stop-opacity="0"/></linearGradient><clipPath id="occhioC"><path d="${eye}"/></clipPath>`,
+      s, [['👓', 250, 300, 11, 'Occhiali'], ['💧', 700, 660, 10, 'Lacrima'], ['🪞', 740, 330, 10, 'Specchietto']]);
+  }
+  { // 23 FORMICAIO
+    const r = rng(208); let s = bg('#7a5230');
+    for (let i = 0; i < 220; i++) s += `<circle cx="${f(r() * 1000)}" cy="${f(r() * 1000)}" r="${f(2 + r() * 7)}" fill="${pick(r, ['#6a4526', '#8b6038', '#5c3b20', '#9a7146'])}" opacity=".7"/>`;
+    const ch = [[520, 480, 95, 62], [260, 300, 80, 50], [760, 300, 70, 46], [280, 700, 85, 52], [740, 690, 80, 50], [500, 180, 60, 38], [500, 820, 60, 38]];
+    const tun = [[0, 1], [0, 2], [0, 3], [0, 4], [1, 5], [2, 5], [3, 6], [4, 6]];
+    tun.forEach(([a, b]) => { const A = ch[a], B = ch[b], mx = (A[0] + B[0]) / 2 + (r() - 0.5) * 120, my = (A[1] + B[1]) / 2 + (r() - 0.5) * 120; const d = `M${A[0]} ${A[1]}Q${f(mx)} ${f(my)} ${B[0]} ${B[1]}`; s += `<path d="${d}" stroke="#2b1a0e" stroke-width="44" fill="none" stroke-linecap="round"/><path d="${d}" stroke="#3d2817" stroke-width="32" fill="none" stroke-linecap="round"/>`; });
+    ch.forEach(([x, y, a, b]) => s += `<ellipse cx="${x}" cy="${y}" rx="${a}" ry="${b}" fill="#2b1a0e"/><ellipse cx="${x}" cy="${y + 4}" rx="${a - 8}" ry="${b - 8}" fill="url(#tanaG)"/>`);
+    const ant = (x, y, a) => `<g transform="translate(${f(x)} ${f(y)}) rotate(${f(a)})"><path d="M-8 0l-10 -12M-8 0l-10 12M0 0l0 -15M0 0l0 15M8 0l10 -12M8 0l10 12" stroke="#120a05" stroke-width="2.5"/><ellipse cx="-13" rx="10" ry="7" fill="#1c0f08"/><circle r="5.5" fill="#1c0f08"/><circle cx="10" r="6.5" fill="#1c0f08"/><circle cx="-15" cy="-2" r="2.5" fill="#fff" opacity=".3"/></g>`;
+    for (let i = 0; i < 16; i++) { const c = ch[1 + (i % 6)]; s += ant(c[0] + (r() - 0.5) * c[2] * 1.2, c[1] + (r() - 0.5) * c[3], r() * 360); }
+    for (let i = 0; i < 12; i++) s += `<ellipse cx="${f(245 + r() * 70)}" cy="${f(690 + r() * 30)}" rx="7" ry="4.5" fill="#f6efe2"/>`;
+    s += back(520, 480, '#3a8a32', '#c9a36b');
+    mk('Formicaio', '🐜', '~10⁻¹ m', '#7a5230', 7, 520, 480, 'Le formiche possono sollevare fino a 50 volte il loro peso. In un formicaio ne vivono anche milioni, tutte figlie della stessa regina!',
+      `<radialGradient id="tanaG"><stop offset="0" stop-color="#5a3d25"/><stop offset="1" stop-color="#33200f"/></radialGradient>`,
+      s, [['👑', 260, 300, 10, 'Corona della regina'], ['🍬', 700, 600, 10, 'Caramella rubata'], ['🍃', 690, 380, 10, 'Pezzetto di foglia']]);
+  }
+
   // ---------- portali: catena principale + bivi ----------
   // catena principale 0→1→…→11→0; ogni scena ha i suoi portali in `portals`
   scenes.forEach((sc, i) => {
@@ -732,6 +830,9 @@ const SCENES = (() => {
   });
   scenes[3].portals.push({ x: 430, y: 450, to: 12 });  // Terra → Oceano
   scenes[4].portals.push({ x: 600, y: 395, to: 14 });  // Città → Corpo umano
+  // bivi extra: il motore disegna da solo il dischetto di fondo (extra: true)
+  [[3, 742, 262, 16], [2, 300, 330, 17], [1, 500, 500, 18], [3, 610, 565, 19], [5, 480, 470, 20], [3, 500, 300, 21], [14, 500, 215, 22], [5, 430, 800, 23]]
+    .forEach(([s, x, y, to]) => scenes[s].portals.push({ x, y, to, extra: true }));
   scenes.forEach(sc => sc.items = sc.items.map(([e, x, y, s, name]) => ({ e, x, y, s, name })));
   return scenes;
 })();

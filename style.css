@@ -82,7 +82,8 @@ body.challenge .banner { display: none; }
   position: fixed; left: 12px; top: 50%; transform: translateY(-50%); z-index: 4; display: flex; flex-direction: column; gap: 2px;
   padding: 6px 4px; background: var(--card); border: 1px solid var(--card-border); border-radius: 999px; backdrop-filter: blur(10px);
 }
-.ladder button { width: 32px; height: 32px; border-radius: 50%; font-size: 17px; opacity: .55; transition: opacity .2s, transform .2s; }
+.ladder { max-height: calc(100vh - 230px); overflow-y: auto; scrollbar-width: none; }
+.ladder button { flex: none; width: 26px; height: 26px; border-radius: 50%; font-size: 14px; opacity: .55; transition: opacity .2s, transform .2s; }
 .ladder button:hover { opacity: 1; }
 .ladder button.on { opacity: 1; transform: scale(1.25); background: rgba(255, 255, 255, .14); }
 .ladder .sep { height: 2px; margin: 4px 6px; background: rgba(255, 255, 255, .25); border-radius: 2px; }
@@ -160,7 +161,7 @@ body.hiding .ladder { display: none; }
   body.hiding .tray { display: none; }
   .toast { bottom: 140px; font-size: 15px; }
   .ladder { left: 4px; padding: 4px 2px; }
-  .ladder button { width: 26px; height: 26px; font-size: 13px; }
+  .ladder button { width: 22px; height: 22px; font-size: 12px; }
   .chbar { top: 76px; padding-left: 10px; }
   .chtime { font-size: 18px; min-width: 48px; }
   .chitems button { width: 34px; height: 34px; font-size: 20px; }
