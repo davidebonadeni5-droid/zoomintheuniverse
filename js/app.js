@@ -12,6 +12,38 @@
     set(k, v) { try { localStorage.setItem(k, JSON.stringify(v)); } catch { /* niente */ } },
   };
   const mod = i => ((i % N) + N) % N;
+
+  // ---------- suoni (sintetizzati, nessun file audio) ----------
+  const Sound = (() => {
+    let ctx, muted = store.get('ziu-mute', false);
+    const ac = () => {
+      if (!ctx) ctx = new (window.AudioContext || window.webkitAudioContext)();
+      if (ctx.state === 'suspended') ctx.resume();
+      return ctx;
+    };
+    function tone(freq, dur, type = 'sine', vol = 0.2, when = 0, slide) {
+      if (muted) return;
+      try {
+        const c = ac(), t0 = c.currentTime + when, o = c.createOscillator(), g = c.createGain();
+        o.type = type; o.frequency.setValueAtTime(freq, t0);
+        if (slide) o.frequency.exponentialRampToValueAtTime(slide, t0 + dur);
+        g.gain.setValueAtTime(0.0001, t0); g.gain.exponentialRampToValueAtTime(vol, t0 + 0.015); g.gain.exponentialRampToValueAtTime(0.0001, t0 + dur);
+        o.connect(g).connect(c.destination); o.start(t0); o.stop(t0 + dur + 0.05);
+      } catch { /* audio non disponibile */ }
+    }
+    return {
+      get muted() { return muted; },
+      toggle() { muted = !muted; store.set('ziu-mute', muted); if (!muted) tone(660, 0.1, 'triangle', 0.12); return muted; },
+      tap() { tone(600, 0.06, 'triangle', 0.07); },
+      found() { [523, 659, 784, 1047].forEach((f, i) => tone(f, 0.18, 'triangle', 0.16, i * 0.09)); },
+      secret() { [523, 659, 784, 1047, 1319].forEach((f, i) => tone(f, 0.22, 'square', 0.06, i * 0.1)); tone(1568, 0.7, 'triangle', 0.14, 0.5); },
+      level(down) { tone(down ? 260 : 1040, 0.55, 'sine', 0.12, 0, down ? 1040 : 260); },
+      hide() { tone(880, 0.1, 'sine', 0.1); tone(1320, 0.14, 'sine', 0.1, 0.1); },
+      tick() { tone(1200, 0.04, 'square', 0.05); },
+      fail() { tone(220, 0.35, 'sawtooth', 0.08, 0, 110); },
+      win() { [523, 659, 784, 1047, 784, 1047, 1319].forEach((f, i) => tone(f, 0.2, 'triangle', 0.16, i * 0.11)); },
+    };
+  })();
   const origin = i => [SCENES[i].portal[0] - HALF, SCENES[i].portal[1] - HALF];
   const fixedPt = i => { const o = origin(i); return [o[0] * R / (R - 1), o[1] * R / (R - 1)]; };
   const esc = s => String(s).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
@@ -20,7 +52,8 @@
   // ---------- stato ----------
   let W = 0, H = 0, base = 1;
   let idx = 0, cx = 500, cy = 500, z = 1, depth = 0;
-  let auto = false, pendingZoom = 0, dirty = true;
+  let auto = false, pendingZoom = 0, anchor = null, dirty = true;
+  let challenge = null;
   let hideMode = false, chosenEmoji = '🦄';
   const found = new Set(store.get('ziu-found', []));
   let visitor = null; const visitorFound = new Set();
@@ -62,7 +95,7 @@
 
   // ---------- passaggi di livello ----------
   function normalize() {
-    let changed = false;
+    let changed = false; const depthBefore = depth;
     for (let g = 0; g < 6; g++) {
       const o = origin(idx);
       if (z >= R && cx >= o[0] && cx <= o[0] + 2 * HALF && cy >= o[1] && cy <= o[1] + 2 * HALF) {
@@ -76,7 +109,7 @@
     }
     cx = clamp(cx, 0, 1000); cy = clamp(cy, 0, 1000); z = Math.min(z, R * 4);
     dirty = true;
-    if (changed) { build(); updateHUD(true); }
+    if (changed) { build(); updateHUD(true); Sound.level(depth < depthBefore); }
   }
   function zoomAt(sx, sy, factor) {
     const k = z * base, wx = cx + (sx - W / 2) / k, wy = cy + (sy - H / 2) / k;
@@ -94,7 +127,8 @@
     if (pendingZoom) {
       const step = pendingZoom * Math.min(1, dt * 8);
       pendingZoom -= step; if (Math.abs(pendingZoom) < 1e-4) pendingZoom = 0;
-      zoomAt(W / 2, H / 2, Math.exp(step));
+      const a = anchor || [W / 2, H / 2];
+      zoomAt(a[0], a[1], Math.exp(step));
     }
     if (auto) {
       const fp = fixedPt(idx), zo = z;
@@ -105,7 +139,7 @@
       cx += (ix - cx) * a; cy += (iy - cy) * a;
       normalize();
     }
-    if (dirty) { render(); dirty = false; }
+    if (dirty) { render(); updateLadder(); dirty = false; }
     requestAnimationFrame(frame);
   }
 
@@ -150,14 +184,15 @@
   svg.addEventListener('pointercancel', endPtr);
   svg.addEventListener('wheel', e => {
     e.preventDefault(); setAuto(false);
-    const unit = e.deltaMode === 1 ? 0.05 : e.deltaMode === 2 ? 1 : 0.0015;
-    zoomAt(e.clientX, e.clientY, Math.exp(-e.deltaY * unit));
+    const unit = e.deltaMode === 1 ? 0.05 : e.deltaMode === 2 ? 1 : 0.0018;
+    anchor = [e.clientX, e.clientY];
+    pendingZoom = clamp(pendingZoom - e.deltaY * unit, -Math.log(12), Math.log(12));
   }, { passive: false });
   addEventListener('keydown', e => {
     if (e.target.closest('input, textarea')) return;
     const step = 60;
-    if (e.key === '+' || e.key === '=') pendingZoom += Math.log(2);
-    else if (e.key === '-' || e.key === '_') pendingZoom -= Math.log(2);
+    if (e.key === '+' || e.key === '=') { anchor = null; pendingZoom += Math.log(2); }
+    else if (e.key === '-' || e.key === '_') { anchor = null; pendingZoom -= Math.log(2); }
     else if (e.key === ' ') { e.preventDefault(); setAuto(!auto); }
     else if (e.key === 'ArrowLeft') pan(step, 0);
     else if (e.key === 'ArrowRight') pan(-step, 0);
@@ -177,13 +212,20 @@
   // ---------- oggetti nascosti ----------
   function collect(id, x, y) {
     const it = ITEM[id];
-    if (found.has(id)) { toast(`${it.e} ${it.name}: già trovato!`); return; }
+    if (challenge && challenge.targets.includes(id) && !challenge.found.has(id)) {
+      challenge.found.add(id); confetti(x, y); Sound.found(); updateChallenge();
+      if (challenge.found.size === challenge.targets.length) return endChallenge(true);
+      toast(`⏱️ ${it.e} ${it.name}! Ne mancano ${challenge.targets.length - challenge.found.size}`);
+      if (!found.has(id)) { found.add(id); store.set('ziu-found', [...found]); build(); updateHUD(false); }
+      return;
+    }
+    if (found.has(id)) { toast(`${it.e} ${it.name}: già trovato!`); Sound.tap(); return; }
     found.add(id); store.set('ziu-found', [...found]);
-    confetti(x, y);
+    confetti(x, y); Sound.found();
     const world = SCENES[it.scene].items.every(i => found.has(i.id));
     toast(`🎉 Hai trovato: ${it.e} ${it.name}!` + (world ? `<br>⭐ Mondo «${SCENES[it.scene].name}» completato!` : ''));
     build(); updateHUD(false);
-    if (found.size === ALL.length) setTimeout(() => showModal(
+    if (found.size === ALL.length) setTimeout(() => Sound.win() || showModal(
       `<div class="big">🏆</div><h2>Hai trovato tutto!</h2><p>Sei un vero esploratore dell'universo infinito. Ora prova a <b>nascondere</b> qualcosa per i tuoi amici! 🙈</p>`), 900);
   }
   function hintFor(it) {
@@ -233,13 +275,13 @@
     const p = locate(sx, sy);
     const s = Math.round(clamp(28 / p.px, 0.05, 120) * 1000) / 1000;
     mine.push({ l: p.l, x: p.x, y: p.y, s, e: chosenEmoji, m: $('hideMsg').value.trim().slice(0, 300) });
-    build(); updateHideCount(); confetti(sx, sy, 10);
+    build(); updateHideCount(); confetti(sx, sy, 10); Sound.hide();
     toast(`${chosenEmoji} nascosto nel mondo «${SCENES[p.l].name}»!`);
   }
   function openSecret(key, x, y) {
     const [kind, j] = key.split(':'), list = kind === 'v' ? visitor && visitor.s : mine, s = list && list[+j];
     if (!s) return;
-    confetti(x, y, 40);
+    confetti(x, y, 40); Sound.secret();
     const who = kind === 'v' ? (visitor.n || 'Qualcuno') : 'Tu';
     if (kind === 'v') { visitorFound.add(+j); updateBanner(); }
     const card = document.createElement('div');
@@ -249,6 +291,78 @@
     card.querySelector('.msg').textContent = s.m ? `“${s.m}”` : '(nessun messaggio, solo una sorpresa!)';
     if (kind === 'v' && visitorFound.size === visitor.s.length) card.insertAdjacentHTML('beforeend', '<p>🏆 Li hai trovati tutti!</p>');
     showModal(card);
+  }
+
+  // ---------- sfida a tempo ----------
+  const CH_N = 5, CH_TIME = 180;
+  function startChallenge() {
+    setHide(false); setAuto(false); closeModal();
+    const pool = ALL.filter(it => it.scene !== idx), targets = [];
+    const bySc = new Map();
+    pool.forEach(it => { if (!bySc.has(it.scene)) bySc.set(it.scene, []); bySc.get(it.scene).push(it); });
+    const scs = [...bySc.keys()].sort(() => Math.random() - 0.5).slice(0, CH_N);
+    scs.forEach(sc => { const l = bySc.get(sc); targets.push(l[Math.floor(Math.random() * l.length)].id); });
+    challenge = { targets, found: new Set(), end: Date.now() + CH_TIME * 1000, timer: setInterval(tickChallenge, 250), warned: false };
+    document.body.classList.add('challenge');
+    $('chBar').hidden = false; updateChallenge();
+    toast(`⏱️ Sfida! Trova ${CH_N} oggetti in ${CH_TIME / 60} minuti. Tocca un'icona per un indizio.`);
+    Sound.win();
+  }
+  function tickChallenge() {
+    if (!challenge) return;
+    const left = Math.max(0, Math.ceil((challenge.end - Date.now()) / 1000));
+    $('chTime').textContent = `${Math.floor(left / 60)}:${String(left % 60).padStart(2, '0')}`;
+    $('chTime').classList.toggle('low', left <= 20);
+    if (left <= 10 && left > 0 && left !== challenge.lastTick) { challenge.lastTick = left; Sound.tick(); }
+    if (left === 0) endChallenge(false);
+  }
+  function updateChallenge() {
+    const box = $('chItems'); box.innerHTML = '';
+    challenge.targets.forEach(id => {
+      const it = ITEM[id], b = document.createElement('button');
+      b.textContent = it.e; b.className = challenge.found.has(id) ? 'ok' : 'sil';
+      b.title = challenge.found.has(id) ? it.name : 'Indizio';
+      b.onclick = () => toast(challenge.found.has(id) ? `✅ ${it.e} ${it.name}` : hintFor(it));
+      box.appendChild(b);
+    });
+  }
+  function endChallenge(won) {
+    if (!challenge) return;
+    clearInterval(challenge.timer);
+    const n = challenge.found.size, took = CH_TIME - Math.max(0, Math.ceil((challenge.end - Date.now()) / 1000));
+    challenge = null; document.body.classList.remove('challenge'); $('chBar').hidden = true;
+    if (won === null) return toast('Sfida annullata.');
+    const best = store.get('ziu-best', null);
+    const fmt = t => `${Math.floor(t / 60)}:${String(t % 60).padStart(2, '0')}`;
+    let h;
+    if (won) {
+      Sound.win();
+      const record = best === null || took < best;
+      if (record) store.set('ziu-best', took);
+      h = `<div class="big">🏆</div><h2>Sfida completata!</h2><p>Hai trovato tutti e ${CH_N} gli oggetti in <b>${fmt(took)}</b>.${record ? ' 🥇 Nuovo record!' : ` Il tuo record è ${fmt(best)}.`}</p>`;
+    } else {
+      Sound.fail();
+      h = `<div class="big">⏰</div><h2>Tempo scaduto!</h2><p>Hai trovato ${n} oggetti su ${CH_N}.${best !== null ? ` Il tuo record è ${fmt(best)}.` : ''} Riprova: ogni sfida ha oggetti diversi!</p>`;
+    }
+    h += `<div class="row center"><button class="primary big-btn" id="chAgain">⏱️ Nuova sfida</button></div>`;
+    showModal(h); $('chAgain').onclick = startChallenge;
+  }
+  $('btnChallenge').onclick = () => challenge ? endChallenge(null) : startChallenge();
+  $('chStop').onclick = () => endChallenge(null);
+
+  // ---------- scala laterale ----------
+  const ladder = $('ladder');
+  SCENES.forEach((sc, i) => {
+    const b = document.createElement('button'); b.textContent = sc.emoji; b.title = sc.name;
+    b.setAttribute('aria-label', `Vai a: ${sc.name}`);
+    b.onclick = () => { setAuto(false); Sound.tap(); window.ziu.go(i); toast(`${sc.emoji} ${sc.name}`); };
+    ladder.appendChild(b);
+  });
+  const ladderMark = document.createElement('span'); ladderMark.className = 'mark'; ladder.appendChild(ladderMark);
+  function updateLadder() {
+    const frac = clamp(Math.log(z) / Math.log(R), 0, 1), pos = (idx + frac + 0.5) / N * 100;
+    ladderMark.style.top = pos + '%';
+    ladder.querySelectorAll('button').forEach((b, i) => b.classList.toggle('on', i === idx));
   }
 
   // ---------- HUD ----------
@@ -296,8 +410,10 @@
   // ---------- pulsanti ----------
   function setAuto(on) { auto = on; $('btnAuto').textContent = on ? '⏸️' : '▶️'; $('btnAuto').setAttribute('aria-label', on ? 'Ferma il viaggio' : 'Viaggio automatico'); }
   $('btnAuto').onclick = () => setAuto(!auto);
-  $('btnIn').onclick = () => { setAuto(false); pendingZoom += Math.log(2.5); };
-  $('btnOut').onclick = () => { setAuto(false); pendingZoom -= Math.log(2.5); };
+  $('btnIn').onclick = () => { setAuto(false); anchor = null; pendingZoom += Math.log(2.5); };
+  $('btnOut').onclick = () => { setAuto(false); anchor = null; pendingZoom -= Math.log(2.5); };
+  $('btnSound').onclick = () => { const m = Sound.toggle(); $('btnSound').textContent = m ? '🔇' : '🔊'; toast(m ? 'Suoni spenti' : 'Suoni accesi 🎵'); };
+  $('btnSound').textContent = Sound.muted ? '🔇' : '🔊';
   $('place').onclick = () => $('place').classList.toggle('open');
   $('btnCollection').onclick = () => {
     let h = `<h2>⭐ La tua collezione</h2><p>${found.size} di ${ALL.length} oggetti trovati</p><div class="coll">`;
@@ -382,6 +498,11 @@
   addEventListener('hashchange', loadVisitor);
   $('startAuto').onclick = () => { $('intro').hidden = true; setAuto(true); };
   $('startFree').onclick = () => { $('intro').hidden = true; toast('Usa la rotellina, pizzica con due dita o premi ➕ per zoomare!'); };
+
+  // chi preferisce meno animazioni: fermiamo quelle dei mondi
+  const rm = matchMedia('(prefers-reduced-motion: reduce)');
+  const applyMotion = () => { try { rm.matches ? svg.pauseAnimations() : svg.unpauseAnimations(); } catch { /* niente */ } };
+  rm.addEventListener && rm.addEventListener('change', applyMotion); applyMotion();
 
   $('totalCount').textContent = ALL.length;
   resize(); loadVisitor(); updateHUD(true);

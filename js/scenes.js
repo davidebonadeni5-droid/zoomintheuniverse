@@ -38,15 +38,26 @@ const SCENES = (() => {
     `<radialGradient id="${id}"><stop offset="0" stop-color="${color}" stop-opacity="${op}"/><stop offset="1" stop-color="${color}" stop-opacity="0"/></radialGradient>`;
   const sphere = (id, light, base, dark) =>
     `<radialGradient id="${id}" cx=".4" cy=".35" r=".7"><stop offset="0" stop-color="${light}"/><stop offset=".55" stop-color="${base}"/><stop offset="1" stop-color="${dark}"/></radialGradient>`;
-  function stars(r, n, P, colors = ['#fff'], maxR = 1.8, avoid = 40) {
+  // stelle: alcune brillano (animazione SMIL, leggera)
+  function stars(r, n, P, colors = ['#fff'], maxR = 1.8, avoid = 40, twinkle = 36) {
     let s = '';
     for (let i = 0; i < n; i++) {
       const x = r() * 1000, y = r() * 1000;
       if (!far(x, y, P, avoid)) continue;
-      s += `<circle cx="${f(x)}" cy="${f(y)}" r="${f(0.4 + r() * maxR)}" fill="${pick(r, colors)}" opacity="${f(0.3 + r() * 0.7)}"/>`;
+      const op = f(0.3 + r() * 0.7);
+      const tw = i < twinkle ? `<animate attributeName="opacity" values="${op};${f(op * 0.25)};${op}" dur="${f(1.5 + r() * 3)}s" begin="${f(-r() * 4)}s" repeatCount="indefinite"/>` : '';
+      s += `<circle cx="${f(x)}" cy="${f(y)}" r="${f(0.4 + r() * maxR)}" fill="${pick(r, colors)}" opacity="${op}">${tw}</circle>`;
     }
     return s;
   }
+  // rotazione continua attorno a un punto
+  const spin = (cx, cy, dur, from = 0) =>
+    `<animateTransform attributeName="transform" type="rotate" from="${from} ${cx} ${cy}" to="${from + 360} ${cx} ${cy}" dur="${dur}s" repeatCount="indefinite"/>`;
+  // oscillazione avanti-indietro
+  const sway = (cx, cy, deg, dur) =>
+    `<animateTransform attributeName="transform" type="rotate" values="${-deg} ${cx} ${cy};${deg} ${cx} ${cy};${-deg} ${cx} ${cy}" dur="${dur}s" repeatCount="indefinite" calcMode="spline" keySplines=".45 0 .55 1;.45 0 .55 1"/>`;
+  const pulse = (attr, a, b, dur) =>
+    `<animate attributeName="${attr}" values="${a};${b};${a}" dur="${dur}s" repeatCount="indefinite" calcMode="spline" keySplines=".45 0 .55 1;.45 0 .55 1"/>`;
   const bg = c => `<rect width="1000" height="1000" fill="${c}"/>`;
 
   const scenes = [];
@@ -76,7 +87,7 @@ const SCENES = (() => {
         const t = i / 26, th = arm * Math.PI + t * 3.2 * Math.PI, rr = sz * (0.15 + t * 0.95);
         g += `<circle cx="${f(x + Math.cos(th) * rr)}" cy="${f(y + Math.sin(th) * rr * 0.6)}" r="${f(0.4 + (1 - t) * 1.2)}" fill="#e8f0ff" opacity="${f(0.9 - t * 0.5)}"/>`;
       }
-      s += `<g transform="rotate(${k * 47} ${x} ${y})">${g}<circle cx="${x}" cy="${y}" r="${sz * 0.18}" fill="#fff8dc"/></g>`;
+      s += `<g transform="rotate(${k * 47} ${x} ${y})">${g}<circle cx="${x}" cy="${y}" r="${sz * 0.18}" fill="#fff8dc"/>${spin(x, y, 60 + k * 25, k * 47)}</g>`;
     });
     scenes.push({
       name: 'Universo', emoji: '🌌', scale: '~10²⁶ m', portal: P, bg: '#070316',
@@ -100,6 +111,7 @@ const SCENES = (() => {
     let s = bg('#06041a') + `<circle cx="500" cy="500" r="480" fill="url(#halo)"/>`;
     s += stars(r, 120, P, ['#fff', '#9fc4ff'], 1);
     const cols = ['#ffffff', '#cfe3ff', '#9fc4ff', '#ffd6f0', '#fff1b8'];
+    s += '<g>';
     for (let arm = 0; arm < 4; arm++) {
       const main = arm % 2 === 0, n = main ? 330 : 130;
       for (let i = 0; i < n; i++) {
@@ -111,7 +123,9 @@ const SCENES = (() => {
         s += `<circle cx="${f(x)}" cy="${f(y)}" r="${f(0.7 + r() * (main ? 2.2 : 1.4))}" fill="${pick(r, cols)}" opacity="${f(0.45 + r() * 0.55)}"/>`;
       }
     }
-    s += `<circle cx="500" cy="500" r="140" fill="url(#bulge)"/>`;
+    s += `${spin(500, 500, 420)}</g><circle cx="500" cy="500" r="140" fill="url(#bulge)"/>`;
+    // il buco nero/portale: anello di luce che gira
+    s += `<g><ellipse cx="${P[0]}" cy="${P[1]}" rx="64" ry="20" fill="none" stroke="#ffd27a" stroke-opacity=".55" stroke-width="4"/>${spin(P[0], P[1], 14)}</g>`;
     scenes.push({
       name: 'Galassia', emoji: '🌀', scale: '~10²¹ m', portal: P, bg: '#06041a',
       fact: 'La Via Lattea ha tra 100 e 400 miliardi di stelle. La luce impiega 100.000 anni per attraversarla!',
@@ -140,14 +154,16 @@ const SCENES = (() => {
     s += `<circle cx="500" cy="500" r="160" fill="url(#sunGlow)"/><circle cx="500" cy="500" r="62" fill="url(#sun)"/>`;
     const [mex, mey] = at(110, 200), [vx, vy] = at(160, 120), [max, may] = at(290, 70);
     const [jx, jy] = at(360, 160), [sx, sy] = at(440, 235);
-    s += `<circle cx="${f(mex)}" cy="${f(mey)}" r="7" fill="url(#merc)"/>`;
-    s += `<circle cx="${f(vx)}" cy="${f(vy)}" r="11" fill="url(#ven)"/>`;
-    s += `<circle cx="${f(max)}" cy="${f(may)}" r="10" fill="url(#mars)"/>`;
-    s += `<g clip-path="url(#jupClip)"><circle cx="${f(jx)}" cy="${f(jy)}" r="30" fill="#d9a066"/>` +
+    s += `<g><circle cx="${f(mex)}" cy="${f(mey)}" r="7" fill="url(#merc)"/>${spin(500, 500, 40)}</g>`;
+    s += `<g><circle cx="${f(vx)}" cy="${f(vy)}" r="11" fill="url(#ven)"/>${spin(500, 500, 70)}</g>`;
+    s += `<g><circle cx="${f(max)}" cy="${f(may)}" r="10" fill="url(#mars)"/>${spin(500, 500, 130)}</g>`;
+    s += `<g>${spin(500, 500, 320)}<g clip-path="url(#jupClip)"><circle cx="${f(jx)}" cy="${f(jy)}" r="30" fill="#d9a066"/>` +
       [-18, -8, 4, 14].map((dy, k) => `<rect x="${f(jx - 32)}" y="${f(jy + dy)}" width="64" height="${k % 2 ? 5 : 4}" fill="${k % 2 ? '#b07443' : '#f2d1a4'}"/>`).join('') +
-      `<ellipse cx="${f(jx + 9)}" cy="${f(jy + 9)}" rx="6" ry="3.5" fill="#c0503a"/><circle cx="${f(jx)}" cy="${f(jy)}" r="30" fill="url(#shade2)"/></g>`;
-    s += `<g transform="rotate(-20 ${f(sx)} ${f(sy)})"><ellipse cx="${f(sx)}" cy="${f(sy)}" rx="36" ry="10" fill="none" stroke="#c9b27a" stroke-width="5" opacity=".9"/>` +
-      `<circle cx="${f(sx)}" cy="${f(sy)}" r="17" fill="url(#sat)"/><path d="M${f(sx - 36)} ${f(sy)}A36 10 0 0 0 ${f(sx + 36)} ${f(sy)}" fill="none" stroke="#e3cf9b" stroke-width="5"/></g>`;
+      `<ellipse cx="${f(jx + 9)}" cy="${f(jy + 9)}" rx="6" ry="3.5" fill="#c0503a"/><circle cx="${f(jx)}" cy="${f(jy)}" r="30" fill="url(#shade2)"/></g></g>`;
+    s += `<g>${spin(500, 500, 520)}<g transform="rotate(-20 ${f(sx)} ${f(sy)})"><ellipse cx="${f(sx)}" cy="${f(sy)}" rx="36" ry="10" fill="none" stroke="#c9b27a" stroke-width="5" opacity=".9"/>` +
+      `<circle cx="${f(sx)}" cy="${f(sy)}" r="17" fill="url(#sat)"/><path d="M${f(sx - 36)} ${f(sy)}A36 10 0 0 0 ${f(sx + 36)} ${f(sy)}" fill="none" stroke="#e3cf9b" stroke-width="5"/></g></g>`;
+    // il Sole respira
+    s = s.replace('r="160" fill="url(#sunGlow)"/>', `r="160" fill="url(#sunGlow)">${pulse('r', 150, 175, 4)}</circle>`);
     scenes.push({
       name: 'Sistema solare', emoji: '☀️', scale: '~10¹³ m', portal: P, bg: '#03030c',
       fact: 'Il Sole contiene il 99,8% di tutta la massa del Sistema solare. Ci starebbero dentro 1 milione di Terre!',
@@ -159,7 +175,7 @@ const SCENES = (() => {
       svg: s,
       items: [
         ['🛰️', 420, 720, 8, 'Satellite'],
-        ['👽', f(max), f(may - 3), 6, 'Alieno su Marte'],
+        ['👽', 236, 806, 6, 'Alieno tra gli asteroidi'],
         ['🍕', 790, 220, 7, 'Pizza spaziale'],
       ],
     });
@@ -179,12 +195,13 @@ const SCENES = (() => {
     for (let i = 0; i < 14; i++) {
       const a = r() * TAU, d = Math.sqrt(r()) * 220, x = 500 + Math.cos(a) * d, y = 500 + Math.sin(a) * d;
       if (!far(x, y, P, 100)) continue;
-      g += `<path d="${blob(r, x, y, 18 + r() * 26, 0.6, 8)}" fill="#fff" opacity=".75"/>`;
+      g += `<path d="${blob(r, x, y, 18 + r() * 26, 0.6, 8)}" fill="#fff" opacity=".75"><animateTransform attributeName="transform" type="translate" values="0 0;${f(4 + r() * 6)} ${f(r() * 3)};0 0" dur="${f(8 + r() * 8)}s" repeatCount="indefinite"/></path>`;
     }
     g += `<circle cx="500" cy="500" r="230" fill="url(#night)"/>`;
     s += `<g clip-path="url(#globeClip)">${g}</g><circle cx="500" cy="500" r="234" fill="none" stroke="#8fd8ff" stroke-opacity=".5" stroke-width="8"/>`;
-    s += `<circle cx="830" cy="230" r="40" fill="url(#moon)"/>` +
-      [[818, 220, 8], [842, 240, 6], [826, 250, 4], [845, 214, 4]].map(([x, y, rr]) => `<circle cx="${x}" cy="${y}" r="${rr}" fill="#9a9a9a" opacity=".6"/>`).join('');
+    s += `<g><circle cx="830" cy="230" r="40" fill="url(#moon)"/>` +
+      [[818, 220, 8], [842, 240, 6], [826, 250, 4], [845, 214, 4]].map(([x, y, rr]) => `<circle cx="${x}" cy="${y}" r="${rr}" fill="#9a9a9a" opacity=".6"/>`).join('') +
+      `<animateTransform attributeName="transform" type="translate" values="0 0;0 -10;0 0" dur="9s" repeatCount="indefinite" calcMode="spline" keySplines=".45 0 .55 1;.45 0 .55 1"/></g>`;
     scenes.push({
       name: 'Terra', emoji: '🌍', scale: '~10⁷ m', portal: P, bg: '#02020a',
       fact: "La Terra gira su sé stessa a circa 1.670 km/h all'equatore… e noi non ce ne accorgiamo!",
@@ -250,8 +267,8 @@ const SCENES = (() => {
     const carCols = ['#e63946', '#ffd166', '#118ab2', '#f4f1de', '#06d6a0', '#8338ec'];
     for (let i = 0; i < 12; i++) {
       const c = pick(r, carCols);
-      if (i < 8) { const x = 30 + r() * 940, y = (i % 2 ? 300 : 770) + (r() < 0.5 ? -11 : 11); if (Math.abs(x - 480) < 40) continue; s += `<rect x="${f(x)}" y="${f(y - 6)}" width="22" height="12" rx="4" fill="${c}"/><rect x="${f(x + 13)}" y="${f(y - 4)}" width="5" height="8" rx="1" fill="#223" opacity=".6"/>`; }
-      else { const y = 30 + r() * 940, x = 480 + (r() < 0.5 ? -11 : 11); if (Math.abs(y - 300) < 40 || Math.abs(y - 770) < 40) continue; s += `<rect x="${f(x - 6)}" y="${f(y)}" width="12" height="22" rx="4" fill="${c}"/><rect x="${f(x - 4)}" y="${f(y + 13)}" width="8" height="5" rx="1" fill="#223" opacity=".6"/>`; }
+      if (i < 8) { const x = 30 + r() * 940, up = r() < 0.5, y = (i % 2 ? 300 : 770) + (up ? -11 : 11); const d = f(40 + r() * 30); s += `<g><rect x="${f(x)}" y="${f(y - 6)}" width="22" height="12" rx="4" fill="${c}"/><rect x="${f(x + (up ? 4 : 13))}" y="${f(y - 4)}" width="5" height="8" rx="1" fill="#223" opacity=".6"/><animateTransform attributeName="transform" type="translate" from="${up ? 1000 : -1000} 0" to="${up ? -1000 : 1000} 0" dur="${d}s" begin="${f(-r() * d)}s" repeatCount="indefinite"/></g>`; }
+      else { const y = 30 + r() * 940, left = r() < 0.5, x = 480 + (left ? -11 : 11); const d = f(40 + r() * 30); s += `<g><rect x="${f(x - 6)}" y="${f(y)}" width="12" height="22" rx="4" fill="${c}"/><rect x="${f(x - 4)}" y="${f(y + (left ? 13 : 4))}" width="8" height="5" rx="1" fill="#223" opacity=".6"/><animateTransform attributeName="transform" type="translate" from="0 ${left ? 1000 : -1000}" to="0 ${left ? -1000 : 1000}" dur="${d}s" begin="${f(-r() * d)}s" repeatCount="indefinite"/></g>`; }
     }
     scenes.push({
       name: 'Città', emoji: '🏘️', scale: '~10³ m', portal: P, bg: '#6dbb5c',
@@ -286,6 +303,7 @@ const SCENES = (() => {
       s += `<ellipse cx="${f(x)}" cy="${f(y)}" rx="22" ry="16" fill="#b7b2a6" stroke="#8f8a7e" stroke-width="3" transform="rotate(${f(r() * 60)} ${f(x)} ${f(y)})"/>`;
     }
     // fiori
+    s += `<circle cx="300" cy="320" r="40" fill="none" stroke="#fff" stroke-opacity=".5" stroke-width="2">${pulse('r', 20, 120, 5)}${pulse('stroke-opacity', 0.5, 0, 5)}</circle>`;
     const fc = ['#ff6b9d', '#ffd93d', '#ffffff', '#c77dff', '#ff8c42', '#4cc9f0'];
     for (let i = 0; i < 60; i++) {
       const x = 40 + r() * 920, y = 40 + r() * 920;
@@ -293,7 +311,7 @@ const SCENES = (() => {
       const p = 7 + r() * 7, c = pick(r, fc);
       let fl = '';
       for (let k = 0; k < 6; k++) { const a = k / 6 * TAU; fl += `<circle cx="${f(x + Math.cos(a) * p)}" cy="${f(y + Math.sin(a) * p)}" r="${f(p * 0.75)}" fill="${c}"/>`; }
-      s += fl + `<circle cx="${f(x)}" cy="${f(y)}" r="${f(p * 0.65)}" fill="${c === '#ffd93d' ? '#a0522d' : '#ffd93d'}"/>`;
+      s += `<g>${fl}<circle cx="${f(x)}" cy="${f(y)}" r="${f(p * 0.65)}" fill="${c === '#ffd93d' ? '#a0522d' : '#ffd93d'}"/>${sway(x, y + p * 2, 6, 3 + r() * 3)}</g>`;
     }
     // cespuglio
     s += `<path d="${blob(r, 830, 830, 130, 0.3)}" fill="#2f7d32"/><path d="${blob(r, 810, 810, 85, 0.35)}" fill="#3f9442"/>`;
@@ -328,11 +346,12 @@ const SCENES = (() => {
     }
     s += `<path d="M60 940Q520 560 940 60" stroke="#79c25f" stroke-width="20" fill="none" stroke-linecap="round"/>`;
     // goccia di rugiada
-    s += `<ellipse cx="748" cy="302" rx="48" ry="46" fill="#000" opacity=".12"/><circle cx="740" cy="290" r="48" fill="url(#drop)" stroke="#e8fbff" stroke-opacity=".75" stroke-width="3"/><ellipse cx="722" cy="270" rx="13" ry="8" fill="#fff" opacity=".9" transform="rotate(-30 722 270)"/>`;
+    s += `<ellipse cx="748" cy="302" rx="48" ry="46" fill="#000" opacity=".12"/><circle cx="740" cy="290" r="48" fill="url(#drop)" stroke="#e8fbff" stroke-opacity=".75" stroke-width="3"/><ellipse cx="722" cy="270" rx="13" ry="8" fill="#fff" opacity=".9" transform="rotate(-30 722 270)">${pulse('opacity', 0.9, 0.5, 3)}</ellipse>`;
     // coccinella
     let b = `<ellipse cx="12" cy="18" rx="125" ry="128" fill="#000" opacity=".2"/>`;
     for (const sg of [-1, 1]) for (const ly of [-50, 0, 50]) b += `<path d="M${sg * 90} ${ly}l${sg * 55} ${ly * 0.3 + 10}l${sg * 12} 22" stroke="#111" stroke-width="7" fill="none" stroke-linecap="round" stroke-linejoin="round"/>`;
-    b += `<path d="M-14 -140q-20 -50 -45 -55M14 -140q20 -50 45 -55" stroke="#111" stroke-width="5" fill="none" stroke-linecap="round"/><circle cx="-59" cy="-195" r="7" fill="#111"/><circle cx="59" cy="-195" r="7" fill="#111"/>`;
+    b += `<g><path d="M-14 -140q-20 -50 -45 -55" stroke="#111" stroke-width="5" fill="none" stroke-linecap="round"/><circle cx="-59" cy="-195" r="7" fill="#111"/>${sway(-14, -140, 8, 2.2)}</g>`;
+    b += `<g><path d="M14 -140q20 -50 45 -55" stroke="#111" stroke-width="5" fill="none" stroke-linecap="round"/><circle cx="59" cy="-195" r="7" fill="#111"/>${sway(14, -140, 8, 2.6)}</g>`;
     b += `<circle cx="0" cy="-108" r="50" fill="#151515"/><circle cx="-21" cy="-128" r="10" fill="#fff"/><circle cx="21" cy="-128" r="10" fill="#fff"/><circle cx="-19" cy="-130" r="4" fill="#111"/><circle cx="23" cy="-130" r="4" fill="#111"/>`;
     b += `<circle cx="0" cy="0" r="118" fill="url(#lady)"/><path d="M-88 -80Q0 -128 88 -80L60 -60Q0 -88 -60 -60Z" fill="#151515"/><path d="M0 -100V118" stroke="#151515" stroke-width="6"/>`;
     [[-55, -20, 24], [55, -20, 24], [-62, 48, 20], [62, 48, 20], [-26, 88, 15], [26, 88, 15], [-88, 10, 10], [88, 10, 10]].forEach(([x, y, rr]) => b += `<circle cx="${x}" cy="${y}" r="${rr}" fill="#151515"/>`);
@@ -372,7 +391,8 @@ const SCENES = (() => {
       if (!far(x, y, P, 110) || !far(x, y, [400, 600], 165) || !far(x, y, [300, 330], 40) || !far(x, y, [690, 690], 30)) continue;
       const rot = f(r() * 180);
       s += `<g transform="rotate(${rot} ${f(x)} ${f(y)})"><ellipse cx="${f(x)}" cy="${f(y)}" rx="27" ry="14" fill="#2e7d32" stroke="#1f5e24" stroke-width="2"/>` +
-        [-12, 0, 12].map(dx => `<rect x="${f(x + dx - 3)}" y="${f(y - 7)}" width="6" height="14" rx="2" fill="#1f5e24"/>`).join('') + `</g>`;
+        [-12, 0, 12].map(dx => `<rect x="${f(x + dx - 3)}" y="${f(y - 7)}" width="6" height="14" rx="2" fill="#1f5e24"/>`).join('') +
+        `<animateTransform attributeName="transform" type="translate" values="0 0;${f((r() - 0.5) * 16)} ${f((r() - 0.5) * 16)};0 0" dur="${f(6 + r() * 6)}s" repeatCount="indefinite" additive="sum"/></g>`;
       placed++;
     }
     [[680, 560, 30], [430, 360, 120], [620, 300, 70], [330, 470, 160]].forEach(([x, y, a]) =>
@@ -410,7 +430,7 @@ const SCENES = (() => {
       balls += `<circle cx="${f(b)}" cy="${y}" r="12" fill="url(#ballB)"/>`;
     }
     s += `<polyline points="${pa}" fill="none" stroke="#f4a261" stroke-width="15" stroke-linecap="round"/>` + balls;
-    s += `<circle cx="${P[0]}" cy="${P[1]}" r="66" fill="url(#atomGlow)"/><circle cx="${P[0]}" cy="${P[1]}" r="58" fill="#14183f" stroke="#a5b4fc" stroke-width="3"/>`;
+    s += `<circle cx="${P[0]}" cy="${P[1]}" r="66" fill="url(#atomGlow)">${pulse('r', 62, 78, 2.5)}</circle><circle cx="${P[0]}" cy="${P[1]}" r="58" fill="#14183f" stroke="#a5b4fc" stroke-width="3"/>`;
     scenes.push({
       name: 'DNA', emoji: '🧬', scale: '~10⁻⁸ m', portal: P, bg: '#5a2f8f',
       fact: 'Se srotolassi il DNA di una sola cellula sarebbe lungo circa 2 metri! È il "libro di istruzioni" di ogni essere vivente.',
@@ -432,10 +452,9 @@ const SCENES = (() => {
     let el = '';
     [0, 60, 120].forEach((rot, i) => {
       s += `<ellipse cx="500" cy="500" rx="380" ry="120" fill="none" stroke="#7fd3ff" stroke-opacity=".45" stroke-width="3" transform="rotate(${rot} 500 500)"/>`;
-      const t = [0.8, 2.6, 4.3][i], rr = rot * Math.PI / 180;
-      const ex = 380 * Math.cos(t), ey = 120 * Math.sin(t);
-      const x = 500 + ex * Math.cos(rr) - ey * Math.sin(rr), y = 500 + ex * Math.sin(rr) + ey * Math.cos(rr);
-      el += `<circle cx="${f(x)}" cy="${f(y)}" r="30" fill="url(#eGlow)"/><circle cx="${f(x)}" cy="${f(y)}" r="11" fill="#dff8ff"/>`;
+      const orbit = 'M880 500A380 120 0 1 1 120 500A380 120 0 1 1 880 500';
+      const mo = `<animateMotion dur="${[5, 7, 6][i]}s" begin="${-i * 2.3}s" repeatCount="indefinite" path="${orbit}"/>`;
+      el += `<g transform="rotate(${rot} 500 500)"><g><circle r="30" fill="url(#eGlow)"/><circle r="11" fill="#dff8ff"/>${mo}</g></g>`;
     });
     s += el;
     scenes.push({
@@ -454,7 +473,7 @@ const SCENES = (() => {
   // ---------- 10. NUCLEO ----------
   {
     const r = rng(122), P = [560, 470];
-    let s = bg('#14183f') + `<circle cx="500" cy="500" r="330" fill="url(#nucGlow)"/>`;
+    let s = bg('#14183f') + `<circle cx="500" cy="500" r="330" fill="url(#nucGlow)">${pulse('r', 310, 350, 3)}</circle>`;
     const balls = [];
     for (let i = 0; i < 22; i++) {
       const rr = 50 * Math.sqrt(i + 0.3), a = i * 2.39996, x = 500 + Math.cos(a) * rr, y = 500 + Math.sin(a) * rr;
@@ -494,10 +513,10 @@ const SCENES = (() => {
         const t = i / 80, o = Math.sin(t * L / 14) * 11;
         d += `${i ? 'L' : 'M'}${f(a[0] + dx * t + nx * o)} ${f(a[1] + dy * t + ny * o)}`;
       }
-      return `<path d="${d}" stroke="#ffd93d" stroke-width="16" opacity=".25" fill="none"/><path d="${d}" stroke="#ffd93d" stroke-width="6" fill="none" stroke-linecap="round"/>`;
+      return `<path d="${d}" stroke="#ffd93d" stroke-width="16" opacity=".25" fill="none">${pulse('opacity', 0.1, 0.4, 1.3)}</path><path d="${d}" stroke="#ffd93d" stroke-width="6" fill="none" stroke-linecap="round"/>`;
     }
     s += wave(Q[0], Q[1]) + wave(Q[1], Q[2]) + wave(Q[2], Q[0]);
-    Q.forEach(([x, y, g, c]) => s += `<circle cx="${x}" cy="${y}" r="100" fill="${c}" opacity=".22"/><circle cx="${x}" cy="${y}" r="68" fill="url(#${g})" stroke="#fff" stroke-opacity=".6" stroke-width="3"/>`);
+    Q.forEach(([x, y, g, c], i) => s += `<circle cx="${x}" cy="${y}" r="100" fill="${c}" opacity=".22">${pulse('r', 90, 115, 1.8 + i * 0.4)}</circle><circle cx="${x}" cy="${y}" r="68" fill="url(#${g})" stroke="#fff" stroke-opacity=".6" stroke-width="3"/>`);
     s += `<circle cx="${P[0]}" cy="${P[1]}" r="82" fill="url(#holeGlow)"/><circle cx="${P[0]}" cy="${P[1]}" r="62" fill="#070316" stroke="#ffb3c1" stroke-opacity=".85" stroke-width="4"/>`;
     scenes.push({
       name: 'Quark', emoji: '✨', scale: '~10⁻¹⁸ m', portal: P, bg: '#c8372f',
